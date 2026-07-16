@@ -1,0 +1,164 @@
+:root {
+  --parchment: #e8ddc4;
+  --parchment-dim: #a89a7a;
+  --ink: #241f1a;
+  --ink-panel: #2f2822;
+  --accent: #a13d2e;
+  --accent-dim: #7a2f23;
+  --border: #4a4038;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--ink);
+  color: var(--parchment);
+  font-family: "Courier New", ui-monospace, monospace;
+}
+
+.app-root {
+  min-height: 100vh;
+}
+
+.landing {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  text-align: center;
+  padding: 2rem;
+}
+
+.title {
+  font-size: 2.5rem;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.subtitle {
+  color: var(--parchment-dim);
+  margin: 0 0 1rem;
+}
+
+.role-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn {
+  background: var(--ink-panel);
+  color: var(--parchment);
+  border: 1px solid var(--border);
+  padding: 0.75rem 1.5rem;
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.btn:hover {
+  border-color: var(--accent);
+}
+
+.btn-dm {
+  border-color: var(--accent-dim);
+}
+
+.status {
+  margin-top: 1.5rem;
+  font-size: 0.85rem;
+  color: var(--parchment-dim);
+}
+
+.status-ok {
+  color: #7a9a6e;
+}
+
+.status-error {
+  color: var(--accent);
+}
+
+.pin-gate {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.pin-gate input {
+  background: var(--ink-panel);
+  border: 1px solid var(--border);
+  color: var(--parchment);
+  padding: 0.5rem;
+  font-family: inherit;
+  margin-right: 0.5rem;
+  letter-spacing: 0.3em;
+  text-align: center;
+  width: 6rem;
+}
+
+.hint {
+  max-width: 24rem;
+  font-size: 0.8rem;
+  color: var(--parchment-dim);
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.link {
+  background: none;
+  border: none;
+  color: var(--parchment-dim);
+  font-family: inherit;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tab {
+  background: none;
+  border: 1px solid transparent;
+  color: var(--parchment-dim);
+  font-family: inherit;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+}
+
+.tab-active {
+  border-color: var(--border);
+  color: var(--parchment);
+}
+
+.content {
+  flex: 1;
+  padding: 1.5rem;
+}
+
+.placeholder {
+  color: var(--parchment-dim);
+  font-style: italic;
+}

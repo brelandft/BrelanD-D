@@ -1,0 +1,4 @@
+project_id = "your-project-ref"
+
+[functions.generate-monster]
+verify_jwt = false
