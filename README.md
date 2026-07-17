@@ -39,6 +39,11 @@ This loads all races, classes, subclasses, feats, backgrounds, items,
 spells, and monsters from `db/seed/srd/`. Re-run any time the seed data
 changes — it's safe, it only replaces rows tagged `source: 'srd'`.
 
+### 2b. Create the Storage bucket for map images
+In the Supabase dashboard: Storage → New bucket → name it `maps` → make it
+**public** (battle map images aren't sensitive, and this keeps the app
+simple — no signed URLs to manage).
+
 ### 3. Deploy the Claude proxy Edge Function
 ```bash
 npm install -g supabase
@@ -60,6 +65,9 @@ generations/hour regardless.
 3. Repo Settings → Secrets and variables → Actions, add:
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_ANON_KEY` (the anon key — safe to expose, see below)
+   - `VITE_APP_SHARED_SECRET` (same value as the Edge Function secret — also
+     safe to expose, since it only gates the function from random internet
+     traffic, not from anyone with this app's link)
 4. Push to `main`. The workflow in `.github/workflows/deploy.yml` builds
    and deploys automatically.
 
@@ -89,9 +97,22 @@ npm install
 npm run dev
 ```
 
-## What's next
+## What's built
 
-This scaffold includes a landing page (role picker + DM PIN gate) and
-placeholder tabs wired to a live Supabase connection, but the actual
-character-creation form, map/token UI, and monster generator UI still
-need building — that's the next phase.
+- **Landing + PIN gate** — hero banner, role picker, shared DM PIN (synced via Supabase, not per-device)
+- **Party roster + character sheets** — race/class/subclass are real dropdowns backed by the SRD data, with HP tracking, death saves, ability scores, skills, inventory, and spell slots
+- **Combat map** — image uploads to Supabase Storage, draggable tokens synced live across everyone's screen
+- **DM monster panel** — browse the full SRD bestiary + any Claude-generated monsters, deploy any of them straight onto the map
+- **Items browser** — searchable SRD equipment list
+
+## Intentionally simplified for now
+
+- **Inventory** is free-text (name + quantity), not yet linked to the items
+  catalog — quick to use, but doesn't pull weight/cost/properties automatically.
+- **Spell slots** are tracked as simple counters; there's no spell-picker
+  pulling from the `spells` table yet.
+- **One shared map at a time** (matches how the table actually plays), rather
+  than a library of saved maps.
+
+None of these are hard to add later — the schema already supports richer
+versions of all three whenever it's worth the build time.

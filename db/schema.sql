@@ -308,6 +308,17 @@ alter table generation_log enable row level security;
 -- No public policy at all: only the Edge Function (service role) touches
 -- this table, so it's invisible even to the anon key.
 
+-- =====================================================================
+-- App settings (shared across all devices — e.g. the DM PIN)
+-- =====================================================================
+create table app_settings (
+  key         text primary key,
+  value       text,
+  updated_at  timestamptz default now()
+);
+alter table app_settings enable row level security;
+create policy "anon full access" on app_settings for all using (true) with check (true);
+
 -- Reference tables (races/classes/feats/backgrounds/items/spells/sprites)
 -- are read-only from the app's perspective day-to-day, so lock writes
 -- to the service role (you, via a seed script) and leave reads open.

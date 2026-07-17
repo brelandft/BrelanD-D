@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --parchment: #e8ddc4;
   --parchment-dim: #a89a7a;
