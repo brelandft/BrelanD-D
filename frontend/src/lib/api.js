@@ -194,13 +194,19 @@ export async function updateMonsterInstanceHp(instanceId, hpCurrent) {
 }
 
 // Calls the Claude-powered Edge Function to draft a new monster and insert it.
-// Requires VITE_SUPABASE_URL / VITE_APP_SHARED_SECRET in the frontend env.
+// Requires VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY / VITE_APP_SHARED_SECRET
+// in the frontend env. Two different headers are doing two different jobs
+// here: Authorization satisfies Supabase's own platform-level gateway check
+// (it just wants *a* valid key, doesn't grant any extra access since RLS
+// still applies), while x-app-secret is our own check inside the function
+// that actually gates who can trigger a Claude API call.
 export async function generateMonster(description) {
   const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-monster`;
   const res = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
       "x-app-secret": import.meta.env.VITE_APP_SHARED_SECRET,
     },
     body: JSON.stringify({ description }),
