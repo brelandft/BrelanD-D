@@ -207,7 +207,7 @@ export async function generateMonster(description) {
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-      "x-app-secret": import.meta.env.VITE_APP_SHARED_SECRET,
+      "x-app-secret": import.meta.env.VITE_APP_SHARED_SECRET?.trim(),
     },
     body: JSON.stringify({ description }),
   });
