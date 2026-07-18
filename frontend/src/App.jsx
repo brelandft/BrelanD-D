@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, Users, Map as MapIcon, ScrollText, Skull, Backpack } from "lucide-react";
+import { ArrowLeft, Users, Map as MapIcon, ScrollText, Skull, Backpack, Sparkles } from "lucide-react";
 import { useFonts, GLOBAL_CSS, T, fontDisplay, fontBody } from "./lib/gameData";
 import {
   loadReferenceData, loadCharacters, createCharacter, deleteCharacter,
@@ -14,6 +14,7 @@ import CharacterSheet from "./components/CharacterSheet";
 import CombatMap from "./components/CombatMap";
 import MonsterPanel from "./components/MonsterPanel";
 import ItemsPanel from "./components/ItemsPanel";
+import HomebrewPanel from "./components/HomebrewPanel";
 
 function enrichCharacter(c, refData) {
   return {
@@ -84,6 +85,9 @@ export default function App() {
     });
     setMap({ ...map, tokens: [...map.tokens, token] });
   }
+  function handleReferenceDataChanged(kind, item) {
+    setRefData((prev) => ({ ...prev, [kind]: [...prev[kind], item].sort((a, b) => a.name.localeCompare(b.name)) }));
+  }
 
   const selected = characters.find((c) => c.id === selectedId);
 
@@ -104,6 +108,7 @@ export default function App() {
     { id: "monsters", label: "Monsters", icon: Skull },
     { id: "map", label: "Map", icon: MapIcon },
     { id: "items", label: "Items", icon: Backpack },
+    { id: "homebrew", label: "Homebrew", icon: Sparkles },
   ];
 
   return (
@@ -179,6 +184,7 @@ export default function App() {
           {dmTab === "monsters" && <MonsterPanel map={map} onTokensChanged={(tokens) => setMap({ ...map, tokens })} />}
           {dmTab === "map" && <CombatMap map={map} onMapChanged={setMap} onTokensChanged={(tokens) => setMap({ ...map, tokens })} />}
           {dmTab === "items" && <ItemsPanel />}
+          {dmTab === "homebrew" && <HomebrewPanel referenceData={refData} onReferenceDataChanged={handleReferenceDataChanged} />}
         </div>
       )}
     </div>

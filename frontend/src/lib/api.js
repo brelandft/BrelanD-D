@@ -3,14 +3,15 @@ import { supabase } from "./supabaseClient";
 // ---------- reference data (SRD + homebrew, read-mostly) ----------
 
 export async function loadReferenceData() {
-  const [races, classes, subclasses, backgrounds, feats] = await Promise.all([
+  const [races, classes, subclasses, backgrounds, feats, spells] = await Promise.all([
     supabase.from("races").select("*").order("name"),
     supabase.from("classes").select("*").order("name"),
     supabase.from("subclasses").select("*").order("name"),
     supabase.from("backgrounds").select("*").order("name"),
     supabase.from("feats").select("*").order("name"),
+    supabase.from("spells").select("*").order("name"),
   ]);
-  for (const r of [races, classes, subclasses, backgrounds, feats]) {
+  for (const r of [races, classes, subclasses, backgrounds, feats, spells]) {
     if (r.error) throw r.error;
   }
   return {
@@ -19,6 +20,7 @@ export async function loadReferenceData() {
     subclasses: subclasses.data,
     backgrounds: backgrounds.data,
     feats: feats.data,
+    spells: spells.data,
   };
 }
 
@@ -193,27 +195,66 @@ export async function updateMonsterInstanceHp(instanceId, hpCurrent) {
   if (error) throw error;
 }
 
-// Calls the Claude-powered Edge Function to draft a new monster and insert it.
-// Requires VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY / VITE_APP_SHARED_SECRET
-// in the frontend env. Two different headers are doing two different jobs
-// here: Authorization satisfies Supabase's own platform-level gateway check
-// (it just wants *a* valid key, doesn't grant any extra access since RLS
-// still applies), while x-app-secret is our own check inside the function
-// that actually gates who can trigger a Claude API call.
-export async function generateMonster(description) {
-  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-monster`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-      "x-app-secret": import.meta.env.VITE_APP_SHARED_SECRET?.trim(),
-    },
-    body: JSON.stringify({ description }),
-  });
-  const body = await res.json();
-  if (!res.ok) throw new Error(body.error || "Monster generation failed");
-  return body.monster;
+// ---------- homebrew content (all write directly to Supabase — no API key, no server needed) ----------
+
+export async function createMonster(monster) {
+  const { data, error } = await supabase
+    .from("monsters")
+    .insert({ ...monster, source: "homebrew", generated_by_claude: false })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function createItem(item) {
+  const { data, error } = await supabase
+    .from("items")
+    .insert({ ...item, source: "homebrew" })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function createSpell(spell) {
+  const { data, error } = await supabase
+    .from("spells")
+    .insert({ ...spell, source: "homebrew" })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function createBackground(background) {
+  const { data, error } = await supabase
+    .from("backgrounds")
+    .insert({ ...background, source: "homebrew" })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function createFeat(feat) {
+  const { data, error } = await supabase
+    .from("feats")
+    .insert({ ...feat, source: "homebrew" })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function createSubclass(subclass) {
+  const { data, error } = await supabase
+    .from("subclasses")
+    .insert({ ...subclass, source: "homebrew" })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
 }
 
 // ---------- app settings (shared DM PIN) ----------
