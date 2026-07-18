@@ -1,5 +1,19 @@
 import { supabase } from "./supabaseClient";
 
+// ---------- campaigns ----------
+
+export async function loadCampaigns() {
+  const { data, error } = await supabase.from("campaigns").select("*").order("created_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createCampaign(name) {
+  const { data, error } = await supabase.from("campaigns").insert({ name }).select().single();
+  if (error) throw error;
+  return data;
+}
+
 // ---------- reference data (SRD + homebrew, read-mostly) ----------
 
 export async function loadReferenceData() {
@@ -26,18 +40,20 @@ export async function loadReferenceData() {
 
 // ---------- characters ----------
 
-export async function loadCharacters() {
+export async function loadCharacters(campaignId) {
   const { data, error } = await supabase
     .from("characters")
     .select("*, character_inventory(*)")
+    .eq("campaign_id", campaignId)
     .order("name");
   if (error) throw error;
   return data;
 }
 
-export function newCharacterDraft(name) {
+export function newCharacterDraft(name, campaignId) {
   return {
     name: name || "New Adventurer",
+    campaign_id: campaignId,
     race_id: null,
     subrace_name: null,
     class_id: null,
@@ -57,14 +73,52 @@ export function newCharacterDraft(name) {
   };
 }
 
-export async function createCharacter(name) {
+export async function createCharacter(name, campaignId) {
   const { data, error } = await supabase
     .from("characters")
-    .insert(newCharacterDraft(name))
+    .insert(newCharacterDraft(name, campaignId))
     .select("*, character_inventory(*)")
     .single();
   if (error) throw error;
   return data;
+}
+
+// Clones a character's current state into a different campaign as a new,
+// independent row — future progress in either campaign never affects the
+// other. This is deliberately a copy, not a shared link: characters are
+// meant to be campaign-scoped, but starting a new game with "the same
+// character" shouldn't mean retyping the whole sheet.
+export async function importCharacterToCampaign(sourceCharacterId, targetCampaignId) {
+  const { data: source, error: fetchErr } = await supabase
+    .from("characters")
+    .select("*, character_inventory(*)")
+    .eq("id", sourceCharacterId)
+    .single();
+  if (fetchErr) throw fetchErr;
+
+  const { id, campaign_id, created_at, updated_at, character_inventory, ...rest } = source;
+  const { data: cloned, error: insertErr } = await supabase
+    .from("characters")
+    .insert({ ...rest, campaign_id: targetCampaignId })
+    .select()
+    .single();
+  if (insertErr) throw insertErr;
+
+  let clonedInventory = [];
+  if (character_inventory.length > 0) {
+    const rows = character_inventory.map(({ id, character_id, ...itemRest }) => ({
+      ...itemRest,
+      character_id: cloned.id,
+    }));
+    const { data: insertedRows, error: invErr } = await supabase
+      .from("character_inventory")
+      .insert(rows)
+      .select();
+    if (invErr) throw invErr;
+    clonedInventory = insertedRows;
+  }
+
+  return { ...cloned, character_inventory: clonedInventory };
 }
 
 export async function updateCharacter(id, patch) {
@@ -103,25 +157,37 @@ export async function deleteInventoryRow(rowId) {
 }
 
 // ---------- maps & tokens ----------
-// Single shared map for now (matches how the party actually plays — one
-// battle map live at a time). Uploading a new image replaces it.
+// A campaign can have several pre-loaded maps (for pre-planning multiple
+// battles); one is "active" at a time — that's the one players see.
 
-export async function loadOrCreateMap() {
-  const { data: existing, error: fetchErr } = await supabase
+export async function loadMaps(campaignId) {
+  const { data, error } = await supabase
     .from("maps")
     .select("*, tokens(*)")
-    .order("created_at", { ascending: false })
-    .limit(1);
-  if (fetchErr) throw fetchErr;
-  if (existing.length > 0) return existing[0];
+    .eq("campaign_id", campaignId)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return data;
+}
 
-  const { data: created, error: createErr } = await supabase
+export async function createMap(campaignId, name) {
+  const { data, error } = await supabase
     .from("maps")
-    .insert({ name: "Battle Map", image_url: "", grid: { enabled: false, cell_size: 50 } })
+    .insert({ campaign_id: campaignId, name: name || "New Map", image_url: "", grid: { enabled: false, cell_size: 50 } })
     .select("*, tokens(*)")
     .single();
-  if (createErr) throw createErr;
-  return created;
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteMap(mapId) {
+  const { error } = await supabase.from("maps").delete().eq("id", mapId);
+  if (error) throw error;
+}
+
+export async function renameMap(mapId, name) {
+  const { error } = await supabase.from("maps").update({ name }).eq("id", mapId);
+  if (error) throw error;
 }
 
 export async function setMapImage(mapId, imageUrl) {

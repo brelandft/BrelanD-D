@@ -1,9 +1,22 @@
 import React, { useState } from "react";
-import { Users, X, Plus } from "lucide-react";
+import { Users, X, Plus, Download } from "lucide-react";
 import { T, fontDisplay, fontBody, fontMono } from "../lib/gameData";
+import ImportCharacterPanel from "./ImportCharacterPanel";
 
-export default function Roster({ characters, selectedId, onSelect, onAdd, onDelete }) {
+export default function Roster({ characters, selectedId, onSelect, onAdd, onDelete, campaigns, currentCampaignId, onImported }) {
   const [newName, setNewName] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [showImport, setShowImport] = useState(false);
+
+  function requestDelete(e, id) {
+    e.stopPropagation();
+    setConfirmDeleteId(id);
+  }
+  function confirmDelete(e, id) {
+    e.stopPropagation();
+    onDelete(id);
+    setConfirmDeleteId(null);
+  }
 
   return (
     <div className="flex flex-col gap-2 p-3" style={{ background: T.panel, borderRight: `1px solid ${T.line}` }}>
@@ -18,14 +31,22 @@ export default function Roster({ characters, selectedId, onSelect, onAdd, onDele
         {characters.map((c) => {
           const pct = c.hp.max > 0 ? Math.max(0, Math.min(100, (c.hp.current / c.hp.max) * 100)) : 0;
           const active = c.id === selectedId;
+          const confirming = confirmDeleteId === c.id;
           return (
             <div key={c.id} onClick={() => onSelect(c.id)} className="relative cursor-pointer rounded px-3 py-2 group"
               style={{ background: active ? T.panel2 : "transparent", border: `1px solid ${active ? T.gold : T.line}` }}>
               <div className="flex items-center justify-between">
                 <span style={{ ...fontDisplay, color: T.parchment, fontSize: "17px", fontWeight: 600 }}>{c.name}</span>
-                <button onClick={(e) => { e.stopPropagation(); onDelete(c.id); }} className="opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: T.blood }}>
-                  <X size={13} />
-                </button>
+                {confirming ? (
+                  <div className="flex items-center gap-1">
+                    <button onClick={(e) => confirmDelete(e, c.id)} className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: T.bloodDim, color: T.parchment, ...fontBody }}>Delete</button>
+                    <button onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null); }} className="text-[10px] px-1.5 py-0.5 rounded" style={{ color: T.parchmentDim, ...fontBody }}>Cancel</button>
+                  </div>
+                ) : (
+                  <button onClick={(e) => requestDelete(e, c.id)} className="opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: T.blood }}>
+                    <X size={13} />
+                  </button>
+                )}
               </div>
               <div className="text-[11px] mb-1" style={{ ...fontBody, color: T.parchmentDim }}>
                 {c.race_name || "—"} {c.class_name || ""} {c.class_name ? `· Lv ${c.level}` : ""}
@@ -50,6 +71,18 @@ export default function Roster({ characters, selectedId, onSelect, onAdd, onDele
           <Plus size={16} />
         </button>
       </div>
+      {!showImport ? (
+        <button onClick={() => setShowImport(true)} className="flex items-center gap-1.5 text-xs mt-1 self-start" style={{ color: T.parchmentDim, ...fontBody }}>
+          <Download size={12} /> Import from another campaign
+        </button>
+      ) : (
+        <ImportCharacterPanel
+          campaigns={campaigns}
+          currentCampaignId={currentCampaignId}
+          onImported={(cloned) => { onImported(cloned); setShowImport(false); }}
+          onClose={() => setShowImport(false)}
+        />
+      )}
     </div>
   );
 }

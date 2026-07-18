@@ -43,6 +43,15 @@ the free SRD only legally includes 1 background and 1 subclass per class
 — everything else in the Player's Handbook is proprietary content, so
 additional ones get added through the app's Homebrew tab instead.
 
+### 2a. If upgrading an existing project: run the campaigns migration
+```sql
+-- paste db/migrations/001_add_campaigns.sql into the SQL Editor and run it
+```
+This is additive — it creates a "My First Campaign" and moves your
+existing characters/maps into it, nothing gets deleted. Skip this step
+entirely on a brand-new project; `db/schema.sql` already includes
+campaigns from the start.
+
 ### 2b. Create the Storage bucket for map images
 In the Supabase dashboard: Storage → New bucket → name it `maps` → make it
 **public**. Then, in the SQL Editor, add the policies that let the app
@@ -92,9 +101,11 @@ npm run dev
 ## What's built
 
 - **Landing + PIN gate** — hero banner, role picker, shared DM PIN (synced via Supabase, not per-device)
+- **Campaigns** — pick or create a campaign after choosing your role; characters and maps are scoped per campaign so multiple games don't collide. Reference content (bestiary, items, spells, subclasses, backgrounds, feats) is shared across all campaigns.
+- **Import a character between campaigns** — clones a character's current sheet into a new campaign as an independent copy; future progress in either campaign doesn't affect the other
 - **Party roster + character sheets** — race/class/subclass are real dropdowns backed by the SRD data, with HP tracking, death saves, ability scores, skills, inventory, and spell slots
-- **Combat map** — image uploads to Supabase Storage, draggable tokens synced live across everyone's screen
-- **DM monster panel** — browse the full SRD bestiary, add your own via a form, deploy any of them straight onto the map
+- **Multiple maps per campaign** — pre-load several battle maps ahead of a session, switch between them with tabs, rename/delete as needed. Image uploads go to Supabase Storage; tokens are draggable and shared live across everyone's screen.
+- **DM monster panel** — browse the full SRD bestiary, add your own via a form, deploy any of them straight onto the active map
 - **Items browser** — searchable SRD equipment list, plus a form to add homebrew items
 - **Homebrew tab** — forms for subclasses, backgrounds, feats, and spells; anything added shows up immediately in character-creation dropdowns
 
@@ -105,8 +116,15 @@ npm run dev
 - **Spell slots** are tracked as simple counters; characters don't yet pick
   known spells from the `spells` table (you can add spells to the catalog,
   just not attach them to a character sheet yet).
-- **One shared map at a time** (matches how the table actually plays), rather
-  than a library of saved maps.
+- **No live sync** — the app loads data when a screen opens, but doesn't
+  push updates to other open screens in real time. If the DM moves a token,
+  players need to switch tabs or refresh to see it move. Supabase supports
+  realtime subscriptions for exactly this; worth adding once it's annoying
+  enough in practice to be worth the build time.
+- **Campaign separation is organizational, not a security boundary** —
+  everyone still shares the same `anon` key with full read/write access;
+  a campaign just filters what each screen shows, it doesn't lock anyone
+  out of anything.
 - **No homebrew race form yet** — races are the most structurally involved
   (sub-races, nested ability bonuses) and least commonly homebrewed; ask if
   you want one built.

@@ -151,10 +151,24 @@ create table sprites (
 );
 
 -- ---------------------------------------------------------------------
+-- Campaigns (progress — characters, maps, and deployed monsters all
+-- belong to exactly one campaign; reference content like the bestiary,
+-- items, spells, subclasses, backgrounds, and feats stays global and is
+-- shared across every campaign, since re-adding your homebrew dragon
+-- for each new game would be tedious for no benefit)
+-- ---------------------------------------------------------------------
+create table campaigns (
+  id          uuid primary key default gen_random_uuid(),
+  name        text not null,
+  created_at  timestamptz default now()
+);
+
+-- ---------------------------------------------------------------------
 -- Characters (party members)
 -- ---------------------------------------------------------------------
 create table characters (
   id                 uuid primary key default gen_random_uuid(),
+  campaign_id        uuid not null references campaigns(id) on delete cascade,
   owner_name         text,                                 -- which family member plays this character
   name               text not null,
   race_id            uuid references races(id),
@@ -233,6 +247,7 @@ create table monsters (
 -- ---------------------------------------------------------------------
 create table maps (
   id           uuid primary key default gen_random_uuid(),
+  campaign_id  uuid not null references campaigns(id) on delete cascade,
   name         text not null,
   image_url    text not null,                                 -- Supabase Storage public URL
   grid         jsonb default '{"enabled": true, "cell_size": 50, "offset_x": 0, "offset_y": 0}',
@@ -286,6 +301,7 @@ alter table monsters enable row level security;
 alter table monster_instances enable row level security;
 alter table maps enable row level security;
 alter table tokens enable row level security;
+alter table campaigns enable row level security;
 
 create policy "anon full access" on characters for all using (true) with check (true);
 create policy "anon full access" on character_inventory for all using (true) with check (true);
@@ -293,6 +309,10 @@ create policy "anon full access" on monsters for all using (true) with check (tr
 create policy "anon full access" on monster_instances for all using (true) with check (true);
 create policy "anon full access" on maps for all using (true) with check (true);
 create policy "anon full access" on tokens for all using (true) with check (true);
+create policy "anon full access" on campaigns for all using (true) with check (true);
+
+create index idx_characters_campaign on characters(campaign_id);
+create index idx_maps_campaign on maps(campaign_id);
 
 -- =====================================================================
 -- Rate limiting for the Claude monster-generation proxy
