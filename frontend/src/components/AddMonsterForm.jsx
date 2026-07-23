@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { T, fontBody, ABILITIES, blankAbilities } from "../lib/gameData";
-import { NumberField, TextField, StringListField, NamedListField } from "./atoms";
+import { NumberField, TextField, SelectField, StringListField, NamedListField } from "./atoms";
 import { createMonster } from "../lib/api";
+import { MONSTER_ICON_OPTIONS, monsterIconFor, PixelGrid } from "../lib/sprites";
 
 const BLANK = {
   name: "", challenge_rating: "", size: "Medium", type: "", alignment: "",
@@ -9,6 +10,7 @@ const BLANK = {
   abilities: blankAbilities(),
   senses: "", languages: "", description: "",
   traits: [], actions: [], legendary_actions: [],
+  sprite_key: "beast",
 };
 
 export default function AddMonsterForm({ onCreated, onCancel }) {
@@ -33,6 +35,7 @@ export default function AddMonsterForm({ onCreated, onCancel }) {
         senses: form.senses, languages: form.languages,
         description: form.description,
         traits: form.traits, actions: form.actions, legendary_actions: form.legendary_actions,
+        sprite_key: form.sprite_key,
       });
       onCreated(created);
       setForm(BLANK);
@@ -43,8 +46,20 @@ export default function AddMonsterForm({ onCreated, onCancel }) {
 
   return (
     <div className="rounded-lg p-4 flex flex-col gap-3" style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 items-end">
         <TextField label="Name" value={form.name} onChange={(v) => set({ name: v })} wide />
+      </div>
+      <div>
+        <span className="text-[10px] uppercase tracking-wider block mb-1" style={{ ...fontBody, color: T.parchmentDim }}>Sprite</span>
+        <div className="flex flex-wrap gap-2">
+          {MONSTER_ICON_OPTIONS.map((opt) => (
+            <button key={opt.id} onClick={() => set({ sprite_key: opt.id })} title={opt.name}
+              className="rounded p-1.5 flex items-center justify-center"
+              style={{ background: form.sprite_key === opt.id ? T.mossDim : T.void, border: `1px solid ${form.sprite_key === opt.id ? T.moss : T.line}` }}>
+              <PixelGrid grid={monsterIconFor(opt.id)} color="#f4ead2" size={20} />
+            </button>
+          ))}
+        </div>
       </div>
       <div className="flex flex-wrap gap-2">
         <TextField label="Size" value={form.size} onChange={(v) => set({ size: v })} />

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Trash2, Heart, ScrollText, Backpack, Sparkles, X, Plus } from "lucide-react";
 import { T, fontDisplay, fontBody, fontMono, ABILITIES, SKILLS, mod, fmtMod, profBonusForLevel } from "../lib/gameData";
+import { COLOR_OPTIONS } from "../lib/sprites";
 import { IconBtn, NumberField, TextField, SelectField } from "./atoms";
 import {
   updateCharacter, addInventoryItem, updateInventoryRow, deleteInventoryRow,
@@ -175,6 +176,14 @@ export default function CharacterSheet({ character, referenceData, onChanged, on
             <span className="text-[10px] uppercase tracking-wider" style={{ ...fontBody, color: T.parchmentDim }}>Prof. Bonus</span>
             <div className="w-14 rounded px-2 py-1 text-center" style={{ ...fontMono, color: T.gold, border: `1px solid ${T.line}` }}>{fmtMod(profBonus)}</div>
           </div>
+        </div>
+        <div className="flex items-center gap-2 mt-3">
+          <span className="text-[10px] uppercase tracking-wider" style={{ ...fontBody, color: T.parchmentDim }}>Token Color</span>
+          {COLOR_OPTIONS.map((c) => (
+            <button key={c.key} onClick={() => patch({ sprite_color: c.key })} title={c.label}
+              className="w-5 h-5 rounded-full"
+              style={{ background: c.hex, border: character.sprite_color === c.key ? `2px solid ${T.parchment}` : "2px solid transparent" }} />
+          ))}
         </div>
       </div>
 

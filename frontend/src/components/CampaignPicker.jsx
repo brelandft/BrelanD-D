@@ -33,6 +33,7 @@ export default function CampaignPicker({ campaigns, onSelect, onCreate, onBack }
           <button key={c.id} onClick={() => onSelect(c.id)} className="rounded-lg px-4 py-3 text-left transition-transform hover:-translate-y-0.5"
             style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
             <span style={{ ...fontDisplay, color: T.parchment, fontSize: "18px", fontWeight: 600 }}>{c.name}</span>
+            {c.description && <p className="text-xs mt-1" style={{ color: T.parchmentDim, ...fontBody }}>{c.description}</p>}
           </button>
         ))}
         {campaigns.length === 0 && (

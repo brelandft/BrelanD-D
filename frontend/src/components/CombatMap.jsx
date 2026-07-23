@@ -1,14 +1,32 @@
 import React, { useRef, useState } from "react";
 import { Upload, X } from "lucide-react";
 import { T, fontBody, fontMono } from "../lib/gameData";
-import { uploadMapImage, setMapImage, moveToken, removeToken as removeTokenApi } from "../lib/api";
+import { uploadMapImage, setMapImage, moveToken, removeToken as removeTokenApi, updateMonsterInstanceHp } from "../lib/api";
+import { TokenSprite, classIconFor, monsterIconFor, COLOR_HEX } from "../lib/sprites";
 
-export default function CombatMap({ map, onMapChanged, onTokensChanged }) {
+function TokenHpEditor({ token, onApply, onClose }) {
+  const [value, setValue] = useState(token.hp_current ?? 0);
+  return (
+    <div className="absolute z-10 rounded p-2 flex flex-col gap-1.5" style={{ left: `${token.x}%`, top: `${token.y}%`, transform: "translate(-50%, 12px)", background: T.panel, border: `1px solid ${T.line}` }}
+      onPointerDown={(e) => e.stopPropagation()}>
+      <span className="text-[10px]" style={{ color: T.parchmentDim, ...fontBody }}>{token.label} HP</span>
+      <div className="flex gap-1">
+        <input type="number" value={value} onChange={(e) => setValue(e.target.value)}
+          className="w-14 rounded px-1 py-0.5 text-center outline-none" style={{ background: T.void, color: T.parchment, border: `1px solid ${T.line}`, ...fontMono }} />
+        <button onClick={() => onApply(Number(value) || 0)} className="rounded px-2 text-xs" style={{ background: T.mossDim, color: T.parchment, ...fontBody }}>Set</button>
+        <button onClick={onClose} className="rounded px-2 text-xs" style={{ color: T.parchmentDim, ...fontBody }}>×</button>
+      </div>
+    </div>
+  );
+}
+
+export default function CombatMap({ map, canEdit, onMapChanged, onTokensChanged }) {
   const containerRef = useRef(null);
   const fileInputRef = useRef(null);
   const [showGrid, setShowGrid] = useState(false);
   const [dragId, setDragId] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [editingHpTokenId, setEditingHpTokenId] = useState(null);
 
   async function handleFile(e) {
     const file = e.target.files?.[0];
@@ -41,6 +59,11 @@ export default function CombatMap({ map, onMapChanged, onTokensChanged }) {
     await removeTokenApi(id);
     onTokensChanged(map.tokens.filter((t) => t.id !== id));
   }
+  async function handleApplyHp(token, newHp) {
+    await updateMonsterInstanceHp(token.entity_id, newHp, token.hp_max);
+    onTokensChanged(map.tokens.map((t) => (t.id === token.id ? { ...t, hp_current: newHp } : t)));
+    setEditingHpTokenId(null);
+  }
 
   if (!map) return null;
 
@@ -71,24 +94,41 @@ export default function CombatMap({ map, onMapChanged, onTokensChanged }) {
               backgroundSize: "5% 5%",
             }} />
           )}
-          {map.tokens.map((t) => (
-            <div key={t.id} onPointerDown={(e) => { e.stopPropagation(); setDragId(t.id); }}
-              className="absolute flex flex-col items-center cursor-grab active:cursor-grabbing group"
-              style={{ left: `${t.x}%`, top: `${t.y}%`, transform: "translate(-50%, -50%)" }}>
-              <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-lg"
-                style={{ background: t.color || T.blood, color: "#fff", border: "2px solid rgba(0,0,0,0.4)", ...fontMono }}>
-                {(t.label || "?").slice(0, 2).toUpperCase()}
+          {map.tokens.map((t) => {
+            const isMonster = t.entity_type === "monster_instance";
+            const grid = isMonster ? monsterIconFor(t.sprite_key) : classIconFor(t.sprite_key);
+            const bodyColor = isMonster ? T.blood : COLOR_HEX[t.sprite_color] || T.blood;
+            return (
+              <div key={t.id}
+                onPointerDown={(e) => { if (!canEdit) return; e.stopPropagation(); setDragId(t.id); }}
+                onClick={(e) => { if (canEdit && isMonster) { e.stopPropagation(); setEditingHpTokenId(t.id); } }}
+                className="absolute flex flex-col items-center group"
+                style={{ left: `${t.x}%`, top: `${t.y}%`, transform: "translate(-50%, -50%)", cursor: canEdit ? "grab" : "default" }}>
+                <TokenSprite bodyColor={bodyColor} grid={grid} size={30} />
+                <span className="text-[10px] mt-0.5 px-1 rounded whitespace-nowrap" style={{ background: "rgba(22,20,15,0.85)", color: T.parchment, ...fontBody }}>{t.label}</span>
+                {t.hp_current != null && (
+                  <span className="text-[9px] px-1 rounded whitespace-nowrap" style={{ background: "rgba(22,20,15,0.85)", color: t.hp_current <= 0 ? T.blood : "#a8c9a3", ...fontMono }}>
+                    {t.hp_current}/{t.hp_max ?? "?"}
+                  </span>
+                )}
+                {canEdit && (
+                  <button onClick={(e) => { e.stopPropagation(); handleRemoveToken(t.id); }}
+                    className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full items-center justify-center hidden group-hover:flex" style={{ background: T.blood, color: "#fff" }}>
+                    <X size={9} />
+                  </button>
+                )}
               </div>
-              <span className="text-[10px] mt-0.5 px-1 rounded whitespace-nowrap" style={{ background: "rgba(22,20,15,0.85)", color: T.parchment, ...fontBody }}>{t.label}</span>
-              <button onClick={(e) => { e.stopPropagation(); handleRemoveToken(t.id); }}
-                className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full items-center justify-center hidden group-hover:flex" style={{ background: T.blood, color: "#fff" }}>
-                <X size={9} />
-              </button>
-            </div>
-          ))}
+            );
+          })}
+          {editingHpTokenId && (() => {
+            const token = map.tokens.find((t) => t.id === editingHpTokenId);
+            return token ? <TokenHpEditor token={token} onApply={(hp) => handleApplyHp(token, hp)} onClose={() => setEditingHpTokenId(null)} /> : null;
+          })()}
         </div>
       )}
-      <p className="text-xs" style={{ color: T.parchmentDim, ...fontBody }}>Drag tokens to reposition. Map and tokens are shared with everyone using this link.</p>
+      <p className="text-xs" style={{ color: T.parchmentDim, ...fontBody }}>
+        {canEdit ? "Drag tokens to reposition. Click a monster token to adjust its HP." : "The DM controls token positions and HP."} Map and tokens are shared with everyone using this link.
+      </p>
     </div>
   );
 }

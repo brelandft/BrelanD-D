@@ -160,6 +160,7 @@ create table sprites (
 create table campaigns (
   id          uuid primary key default gen_random_uuid(),
   name        text not null,
+  description text,
   created_at  timestamptz default now()
 );
 
@@ -177,6 +178,7 @@ create table characters (
   subclass_id        uuid references subclasses(id),
   level              int not null default 1,
   background_id      uuid references backgrounds(id),
+  sprite_color       text default 'blue',                   -- one of: red/orange/yellow/green/blue/purple
   alignment          text,
   abilities          jsonb not null default
                        '{"str":10,"dex":10,"con":10,"int":10,"wis":10,"cha":10}',
@@ -221,6 +223,7 @@ create table monsters (
   size               text,
   type               text,                                  -- 'beast','undead','fiend', etc.
   alignment          text,
+  sprite_key         text default 'beast',                   -- which pixel icon to use on the map
   ac                 int,
   hp_average         int,
   hp_dice            text,                                    -- '9d8+9'
@@ -280,6 +283,10 @@ create table tokens (
   y                   numeric not null default 0,
   color               text,               -- fallback token color if no sprite
   label               text,
+  hp_current          int,                -- denormalized snapshot, refreshed on HP change
+  hp_max              int,
+  sprite_key          text,               -- which pixel icon to render
+  sprite_color        text,               -- for character tokens; monster tokens use a fixed palette
   created_at          timestamptz default now(),
   updated_at          timestamptz default now()
 );

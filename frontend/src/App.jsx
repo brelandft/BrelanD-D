@@ -2,15 +2,16 @@ import React, { useEffect, useState } from "react";
 import { ArrowLeft, Users, Map as MapIcon, ScrollText, Skull, Backpack, Sparkles } from "lucide-react";
 import { useFonts, GLOBAL_CSS, T, fontDisplay, fontBody } from "./lib/gameData";
 import {
-  loadReferenceData, loadCampaigns, createCampaign,
+  loadReferenceData, loadCampaigns, createCampaign, updateCampaign,
   loadCharacters, createCharacter, deleteCharacter,
-  loadMaps, createMap, deleteMap, renameMap, addToken, loadDmPin,
+  loadMaps, createMap, deleteMap, renameMap, addToken, loadDmPin, syncTokenHp,
 } from "./lib/api";
 import "./styles.css";
 
 import Landing from "./components/Landing";
 import PinGate from "./components/PinGate";
 import CampaignPicker from "./components/CampaignPicker";
+import CampaignSettings from "./components/CampaignSettings";
 import Roster from "./components/Roster";
 import CharacterSheet from "./components/CharacterSheet";
 import CombatMap from "./components/CombatMap";
@@ -120,6 +121,16 @@ export default function App() {
   function handleCharacterChanged(updated) {
     const enriched = enrichCharacter(updated, refData);
     setCharacters((prev) => prev.map((c) => (c.id === enriched.id ? enriched : c)));
+    if (updated.hp) {
+      syncTokenHp("character", updated.id, updated.hp.current, updated.hp.max).catch(() => {});
+      setMaps((prev) => prev.map((m) => ({
+        ...m,
+        tokens: m.tokens.map((t) => (t.entity_type === "character" && t.entity_id === updated.id ? { ...t, hp_current: updated.hp.current, hp_max: updated.hp.max } : t)),
+      })));
+    }
+  }
+  function handleCampaignChanged(updated) {
+    setCampaigns((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
   }
   async function handleDeleteCharacter(id) {
     await deleteCharacter(id);
@@ -131,7 +142,12 @@ export default function App() {
   }
   async function handlePlaceOnMap(character) {
     if (!activeMap) return;
-    const token = await addToken(activeMap.id, { entityType: "character", entityId: character.id, label: character.name, color: "#4a6d8b" });
+    const token = await addToken(activeMap.id, {
+      entityType: "character", entityId: character.id, label: character.name, color: "#4a6d8b",
+      hpCurrent: character.hp.current, hpMax: character.hp.max,
+      spriteKey: (character.class_name || "fighter").toLowerCase(),
+      spriteColor: character.sprite_color || "blue",
+    });
     updateMapTokens(activeMap.id, [...activeMap.tokens, token]);
   }
   function handleReferenceDataChanged(kind, item) {
@@ -231,6 +247,12 @@ export default function App() {
             ))}
           </div>
 
+          {view === "dm" && currentCampaign && (
+            <div className="px-4 py-2" style={{ borderBottom: `1px solid ${T.line}`, background: T.panel }}>
+              <CampaignSettings campaign={currentCampaign} onChanged={handleCampaignChanged} />
+            </div>
+          )}
+
           {view === "party" && (
             <div className="flex flex-1 flex-col sm:flex-row">
               {(tab === "roster" || tab === "sheet") && (
@@ -259,13 +281,16 @@ export default function App() {
                 {tab === "roster" && (
                   <div className="p-8 max-w-lg">
                     <p style={{ ...fontDisplay, color: T.parchment, fontSize: "20px" }} className="mb-2">Welcome back, adventurer.</p>
+                    {currentCampaign?.description && (
+                      <p className="text-sm mb-3 italic" style={{ color: T.parchmentDim, ...fontBody }}>{currentCampaign.description}</p>
+                    )}
                     <p className="text-sm" style={{ color: T.parchmentDim, ...fontBody }}>Pick a character from the left to open their sheet, or add a new one.</p>
                   </div>
                 )}
                 {tab === "map" && (
                   <>
                     <MapTabs maps={maps} activeMapId={activeMapId} onSelect={setActiveMapId} onCreate={handleCreateMap} onDelete={handleDeleteMap} onRename={handleRenameMap} />
-                    <CombatMap map={activeMap} onMapChanged={(m) => updateMapFields(m.id, m)} onTokensChanged={(tokens) => updateMapTokens(activeMap.id, tokens)} />
+                    <CombatMap map={activeMap} canEdit={view === "dm"} onMapChanged={(m) => updateMapFields(m.id, m)} onTokensChanged={(tokens) => updateMapTokens(activeMap.id, tokens)} />
                   </>
                 )}
               </div>
@@ -278,7 +303,7 @@ export default function App() {
               {dmTab === "map" && (
                 <>
                   <MapTabs maps={maps} activeMapId={activeMapId} onSelect={setActiveMapId} onCreate={handleCreateMap} onDelete={handleDeleteMap} onRename={handleRenameMap} />
-                  <CombatMap map={activeMap} onMapChanged={(m) => updateMapFields(m.id, m)} onTokensChanged={(tokens) => updateMapTokens(activeMap.id, tokens)} />
+                  <CombatMap map={activeMap} canEdit={view === "dm"} onMapChanged={(m) => updateMapFields(m.id, m)} onTokensChanged={(tokens) => updateMapTokens(activeMap.id, tokens)} />
                 </>
               )}
               {dmTab === "items" && <ItemsPanel />}

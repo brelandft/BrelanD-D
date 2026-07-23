@@ -14,6 +14,12 @@ export async function createCampaign(name) {
   return data;
 }
 
+export async function updateCampaign(id, patch) {
+  const { data, error } = await supabase.from("campaigns").update(patch).eq("id", id).select().single();
+  if (error) throw error;
+  return data;
+}
+
 // ---------- reference data (SRD + homebrew, read-mostly) ----------
 
 export async function loadReferenceData() {
@@ -203,10 +209,10 @@ export async function uploadMapImage(file) {
   return data.publicUrl;
 }
 
-export async function addToken(mapId, { entityType, entityId, label, color, x = 50, y = 50 }) {
+export async function addToken(mapId, { entityType, entityId, label, color, x = 50, y = 50, hpCurrent = null, hpMax = null, spriteKey = null, spriteColor = null }) {
   const { data, error } = await supabase
     .from("tokens")
-    .insert({ map_id: mapId, entity_type: entityType, entity_id: entityId, label, color, x, y })
+    .insert({ map_id: mapId, entity_type: entityType, entity_id: entityId, label, color, x, y, hp_current: hpCurrent, hp_max: hpMax, sprite_key: spriteKey, sprite_color: spriteColor })
     .select()
     .single();
   if (error) throw error;
@@ -250,14 +256,31 @@ export async function deployMonster(mapId, monster) {
     entityId: instance.id,
     label: monster.name,
     color: "#a13d2e",
+    hpCurrent: monster.hp_average,
+    hpMax: monster.hp_average,
+    spriteKey: monster.sprite_key || "beast",
   });
 }
 
-export async function updateMonsterInstanceHp(instanceId, hpCurrent) {
+export async function updateMonsterInstanceHp(instanceId, hpCurrent, hpMax) {
   const { error } = await supabase
     .from("monster_instances")
     .update({ hp_current: hpCurrent })
     .eq("id", instanceId);
+  if (error) throw error;
+  await syncTokenHp("monster_instance", instanceId, hpCurrent, hpMax);
+}
+
+// Keeps a token's denormalized HP display in sync after the underlying
+// character/monster's HP changes. There's no live cross-screen sync yet
+// (see README), so this only updates the database row — the local map
+// state in App.jsx is updated separately for whoever's screen triggered it.
+export async function syncTokenHp(entityType, entityId, hpCurrent, hpMax) {
+  const { error } = await supabase
+    .from("tokens")
+    .update({ hp_current: hpCurrent, hp_max: hpMax })
+    .eq("entity_type", entityType)
+    .eq("entity_id", entityId);
   if (error) throw error;
 }
 
