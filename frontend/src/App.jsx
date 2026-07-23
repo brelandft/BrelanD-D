@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, Users, Map as MapIcon, ScrollText, Skull, Backpack, Sparkles } from "lucide-react";
+import { ArrowLeft, Users, Map as MapIcon, ScrollText, Skull, Backpack, Sparkles, BookOpen } from "lucide-react";
 import { useFonts, GLOBAL_CSS, T, fontDisplay, fontBody } from "./lib/gameData";
 import {
   loadReferenceData, loadCampaigns, createCampaign, updateCampaign,
@@ -19,6 +19,9 @@ import MapTabs from "./components/MapTabs";
 import MonsterPanel from "./components/MonsterPanel";
 import ItemsPanel from "./components/ItemsPanel";
 import HomebrewPanel from "./components/HomebrewPanel";
+import DmRosterPanel from "./components/DmRosterPanel";
+import PartyReference from "./components/PartyReference";
+import DmReference from "./components/DmReference";
 
 function enrichCharacter(c, refData) {
   return {
@@ -33,7 +36,7 @@ export default function App() {
   const [view, setView] = useState("landing"); // landing | dm-gate | campaign-select | party | dm
   const [pendingRole, setPendingRole] = useState(null);
   const [tab, setTab] = useState("roster");
-  const [dmTab, setDmTab] = useState("monsters");
+  const [dmTab, setDmTab] = useState("roster");
 
   const [refData, setRefData] = useState(null);
   const [dmPin, setDmPin] = useState(null);
@@ -194,12 +197,15 @@ export default function App() {
     { id: "roster", label: "Roster", icon: Users },
     { id: "sheet", label: "Character Sheet", icon: ScrollText },
     { id: "map", label: "Map", icon: MapIcon },
+    { id: "reference", label: "Reference", icon: BookOpen },
   ];
   const DM_TABS = [
+    { id: "roster", label: "Roster", icon: Users },
     { id: "monsters", label: "Monsters", icon: Skull },
     { id: "map", label: "Map", icon: MapIcon },
     { id: "items", label: "Items", icon: Backpack },
     { id: "homebrew", label: "Homebrew", icon: Sparkles },
+    { id: "reference", label: "Reference", icon: BookOpen },
   ];
   const currentCampaign = campaigns.find((c) => c.id === campaignId);
 
@@ -260,21 +266,14 @@ export default function App() {
                   <Roster
                     characters={characters} selectedId={selectedId}
                     onSelect={(id) => { setSelectedId(id); setTab("sheet"); }}
-                    onAdd={handleAddCharacter} onDelete={handleDeleteCharacter}
+                    onAdd={handleAddCharacter}
                     campaigns={campaigns} currentCampaignId={campaignId} onImported={handleImportedCharacter}
                   />
                 </div>
               )}
               <div className="flex-1 overflow-auto">
                 {tab === "sheet" && (selected ? (
-                  <>
-                    <CharacterSheet character={selected} referenceData={refData} onChanged={handleCharacterChanged} onDelete={handleDeleteCharacter} />
-                    <div className="px-4 pb-6">
-                      <button onClick={() => handlePlaceOnMap(selected)} className="text-xs rounded px-3 py-1.5" style={{ background: T.panel2, border: `1px solid ${T.line}`, color: T.parchmentDim, ...fontBody }}>
-                        Place {selected.name} on the map
-                      </button>
-                    </div>
-                  </>
+                  <CharacterSheet character={selected} referenceData={refData} onChanged={handleCharacterChanged} />
                 ) : (
                   <div className="p-8"><p style={{ color: T.parchmentDim, ...fontBody }}>Select or add a character from the party list.</p></div>
                 ))}
@@ -293,12 +292,20 @@ export default function App() {
                     <CombatMap map={activeMap} canEdit={view === "dm"} onMapChanged={(m) => updateMapFields(m.id, m)} onTokensChanged={(tokens) => updateMapTokens(activeMap.id, tokens)} />
                   </>
                 )}
+                {tab === "reference" && <PartyReference />}
               </div>
             </div>
           )}
 
           {view === "dm" && (
             <div className="flex-1 overflow-auto">
+              {dmTab === "roster" && (
+                <DmRosterPanel
+                  characters={characters} referenceData={refData}
+                  onChanged={handleCharacterChanged} onDelete={handleDeleteCharacter}
+                  onPlaceOnMap={handlePlaceOnMap} canPlaceOnMap={!!activeMap}
+                />
+              )}
               {dmTab === "monsters" && <MonsterPanel map={activeMap} onTokensChanged={(tokens) => updateMapTokens(activeMap.id, tokens)} />}
               {dmTab === "map" && (
                 <>
@@ -308,6 +315,7 @@ export default function App() {
               )}
               {dmTab === "items" && <ItemsPanel />}
               {dmTab === "homebrew" && <HomebrewPanel referenceData={refData} onReferenceDataChanged={handleReferenceDataChanged} />}
+              {dmTab === "reference" && <DmReference />}
             </div>
           )}
         </>

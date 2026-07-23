@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Trash2, Heart, ScrollText, Backpack, Sparkles, X, Plus } from "lucide-react";
 import { T, fontDisplay, fontBody, fontMono, ABILITIES, SKILLS, mod, fmtMod, profBonusForLevel } from "../lib/gameData";
-import { COLOR_OPTIONS } from "../lib/sprites";
-import { IconBtn, NumberField, TextField, SelectField } from "./atoms";
+import { IconBtn, NumberField, TextField, SelectField, StaticField } from "./atoms";
+import { COLOR_OPTIONS, TokenSprite, classImageFor, COLOR_HEX } from "../lib/sprites";
 import {
   updateCharacter, addInventoryItem, updateInventoryRow, deleteInventoryRow,
 } from "../lib/api";
@@ -106,7 +106,7 @@ function HPTracker({ character, onUpdate }) {
   );
 }
 
-export default function CharacterSheet({ character, referenceData, onChanged, onDelete }) {
+export default function CharacterSheet({ character, referenceData, onChanged, onDelete, isDM = false }) {
   const profBonus = profBonusForLevel(character.level);
   const { races, classes, subclasses, backgrounds } = referenceData;
   const subraces = races.find((r) => r.id === character.race_id)?.subraces || [];
@@ -154,37 +154,67 @@ export default function CharacterSheet({ character, referenceData, onChanged, on
         <div className="flex justify-between items-start mb-3">
           <input value={character.name} onChange={(e) => patch({ name: e.target.value })} className="bg-transparent outline-none w-full"
             style={{ ...fontDisplay, color: T.parchment, fontSize: "32px", fontWeight: 700 }} />
-          <IconBtn onClick={() => onDelete(character.id)} title="Delete character" danger><Trash2 size={15} /></IconBtn>
+          {isDM && <IconBtn onClick={() => onDelete(character.id)} title="Delete character" danger><Trash2 size={15} /></IconBtn>}
+        </div>
+        <div className="flex items-center gap-3 mb-3">
+          <TokenSprite image={classImageFor(character.class_name)} ringColor={COLOR_HEX[character.sprite_color] || COLOR_HEX.blue} size={56} />
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] uppercase tracking-wider" style={{ ...fontBody, color: T.parchmentDim }}>Token Color</span>
+            {COLOR_OPTIONS.map((c) => (
+              <button key={c.key} onClick={() => patch({ sprite_color: c.key })} title={c.label}
+                className="w-5 h-5 rounded-full"
+                style={{ background: c.hex, border: character.sprite_color === c.key ? `2px solid ${T.parchment}` : "2px solid transparent" }} />
+            ))}
+          </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <SelectField label="Race" value={character.race_id} onChange={(v) => patch({ race_id: v, subrace_name: null })} options={races} small />
-          {subraces.length > 0 && (
-            <SelectField label="Subrace" value={character.subrace_name} onChange={(v) => patch({ subrace_name: v })}
-              options={subraces.map((sr) => ({ id: sr.name, name: sr.name }))} small />
+          {isDM ? (
+            <>
+              <SelectField label="Race" value={character.race_id} onChange={(v) => patch({ race_id: v, subrace_name: null })} options={races} small />
+              {subraces.length > 0 && (
+                <SelectField label="Subrace" value={character.subrace_name} onChange={(v) => patch({ subrace_name: v })}
+                  options={subraces.map((sr) => ({ id: sr.name, name: sr.name }))} small />
+              )}
+              <SelectField label="Class" value={character.class_id} onChange={(v) => patch({ class_id: v, subclass_id: null })} options={classes} small />
+              {availableSubclasses.length > 0 && (
+                <SelectField label="Subclass" value={character.subclass_id} onChange={(v) => patch({ subclass_id: v })} options={availableSubclasses} small />
+              )}
+              <NumberField label="Level" value={character.level} onChange={(v) => patch({ level: Number(v) || 1 })} small />
+              <SelectField label="Background" value={character.background_id} onChange={(v) => patch({ background_id: v })} options={backgrounds} small />
+            </>
+          ) : (
+            <>
+              <StaticField label="Race" value={races.find((r) => r.id === character.race_id)?.name} small />
+              {character.subrace_name && <StaticField label="Subrace" value={character.subrace_name} small />}
+              <StaticField label="Class" value={classes.find((c) => c.id === character.class_id)?.name} small />
+              {character.subclass_id && <StaticField label="Subclass" value={subclasses.find((s) => s.id === character.subclass_id)?.name} small />}
+              <StaticField label="Level" value={character.level} small />
+              <StaticField label="Background" value={backgrounds.find((b) => b.id === character.background_id)?.name} small />
+            </>
           )}
-          <SelectField label="Class" value={character.class_id} onChange={(v) => patch({ class_id: v, subclass_id: null })} options={classes} small />
-          {availableSubclasses.length > 0 && (
-            <SelectField label="Subclass" value={character.subclass_id} onChange={(v) => patch({ subclass_id: v })} options={availableSubclasses} small />
-          )}
-          <NumberField label="Level" value={character.level} onChange={(v) => patch({ level: Number(v) || 1 })} small />
-          <SelectField label="Background" value={character.background_id} onChange={(v) => patch({ background_id: v })} options={backgrounds} small />
         </div>
         <div className="flex flex-wrap gap-2 mt-2">
-          <NumberField label="Armor Class" value={character.ac} onChange={(v) => patch({ ac: Number(v) || 0 })} small />
-          <NumberField label="Speed" value={character.speed} onChange={(v) => patch({ speed: Number(v) || 0 })} small />
+          {isDM ? (
+            <>
+              <NumberField label="Armor Class" value={character.ac} onChange={(v) => patch({ ac: Number(v) || 0 })} small />
+              <NumberField label="Speed" value={character.speed} onChange={(v) => patch({ speed: Number(v) || 0 })} small />
+            </>
+          ) : (
+            <>
+              <StaticField label="Armor Class" value={character.ac} small />
+              <StaticField label="Speed" value={character.speed} small />
+            </>
+          )}
           <div className="flex flex-col gap-1">
             <span className="text-[10px] uppercase tracking-wider" style={{ ...fontBody, color: T.parchmentDim }}>Prof. Bonus</span>
             <div className="w-14 rounded px-2 py-1 text-center" style={{ ...fontMono, color: T.gold, border: `1px solid ${T.line}` }}>{fmtMod(profBonus)}</div>
           </div>
         </div>
-        <div className="flex items-center gap-2 mt-3">
-          <span className="text-[10px] uppercase tracking-wider" style={{ ...fontBody, color: T.parchmentDim }}>Token Color</span>
-          {COLOR_OPTIONS.map((c) => (
-            <button key={c.key} onClick={() => patch({ sprite_color: c.key })} title={c.label}
-              className="w-5 h-5 rounded-full"
-              style={{ background: c.hex, border: character.sprite_color === c.key ? `2px solid ${T.parchment}` : "2px solid transparent" }} />
-          ))}
-        </div>
+        {!isDM && (
+          <p className="text-xs mt-3" style={{ color: T.parchmentDim, ...fontBody }}>
+            Race, class, level, and other core stats are set by your DM. Ask them to make changes.
+          </p>
+        )}
       </div>
 
       <HPTracker character={character} onUpdate={patch} />
@@ -195,8 +225,12 @@ export default function CharacterSheet({ character, referenceData, onChanged, on
           {ABILITIES.map((ab) => (
             <div key={ab} className="rounded p-2 text-center" style={{ background: T.void, border: `1px solid ${T.line}` }}>
               <div className="text-[10px] uppercase" style={{ ...fontBody, color: T.parchmentDim }}>{ab}</div>
-              <input type="number" value={character.abilities[ab]} onChange={(e) => setAbility(ab, e.target.value)}
-                className="w-full bg-transparent text-center outline-none" style={{ ...fontMono, color: T.parchment, fontSize: "20px" }} />
+              {isDM ? (
+                <input type="number" value={character.abilities[ab]} onChange={(e) => setAbility(ab, e.target.value)}
+                  className="w-full bg-transparent text-center outline-none" style={{ ...fontMono, color: T.parchment, fontSize: "20px" }} />
+              ) : (
+                <div style={{ ...fontMono, color: T.parchmentDim, fontSize: "20px" }}>{character.abilities[ab]}</div>
+              )}
               <div style={{ ...fontMono, color: T.gold, fontSize: "13px" }}>{fmtMod(mod(character.abilities[ab]))}</div>
             </div>
           ))}
@@ -214,8 +248,8 @@ export default function CharacterSheet({ character, referenceData, onChanged, on
             const bonus = mod(character.abilities[ab]) + (proficient ? profBonus : 0);
             return (
               <div key={name} className="flex items-center gap-2 py-0.5">
-                <button onClick={() => toggleSkill(name)} className="w-3.5 h-3.5 rounded-full flex-shrink-0"
-                  style={{ background: proficient ? T.gold : T.void, border: `1px solid ${T.gold}` }} />
+                <button onClick={() => isDM && toggleSkill(name)} disabled={!isDM} className="w-3.5 h-3.5 rounded-full flex-shrink-0"
+                  style={{ background: proficient ? T.gold : T.void, border: `1px solid ${T.gold}`, cursor: isDM ? "pointer" : "default" }} />
                 <span className="text-sm flex-1" style={{ ...fontBody, color: T.parchment }}>{name} <span style={{ color: T.parchmentDim, fontSize: "11px" }}>({ab})</span></span>
                 <span style={{ ...fontMono, color: T.parchmentDim, fontSize: "13px", width: "28px", textAlign: "right" }}>{fmtMod(bonus)}</span>
               </div>

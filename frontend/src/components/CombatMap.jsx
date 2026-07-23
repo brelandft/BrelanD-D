@@ -2,7 +2,7 @@ import React, { useRef, useState } from "react";
 import { Upload, X } from "lucide-react";
 import { T, fontBody, fontMono } from "../lib/gameData";
 import { uploadMapImage, setMapImage, moveToken, removeToken as removeTokenApi, updateMonsterInstanceHp } from "../lib/api";
-import { TokenSprite, classIconFor, monsterIconFor, COLOR_HEX } from "../lib/sprites";
+import { TokenSprite, classImageFor, monsterImageFor, COLOR_HEX } from "../lib/sprites";
 
 function TokenHpEditor({ token, onApply, onClose }) {
   const [value, setValue] = useState(token.hp_current ?? 0);
@@ -96,15 +96,15 @@ export default function CombatMap({ map, canEdit, onMapChanged, onTokensChanged 
           )}
           {map.tokens.map((t) => {
             const isMonster = t.entity_type === "monster_instance";
-            const grid = isMonster ? monsterIconFor(t.sprite_key) : classIconFor(t.sprite_key);
-            const bodyColor = isMonster ? T.blood : COLOR_HEX[t.sprite_color] || T.blood;
+            const image = isMonster ? monsterImageFor(t.sprite_key) : classImageFor(t.sprite_key);
+            const ringColor = isMonster ? T.blood : (COLOR_HEX[t.sprite_color] || T.blood);
             return (
               <div key={t.id}
                 onPointerDown={(e) => { if (!canEdit) return; e.stopPropagation(); setDragId(t.id); }}
                 onClick={(e) => { if (canEdit && isMonster) { e.stopPropagation(); setEditingHpTokenId(t.id); } }}
                 className="absolute flex flex-col items-center group"
                 style={{ left: `${t.x}%`, top: `${t.y}%`, transform: "translate(-50%, -50%)", cursor: canEdit ? "grab" : "default" }}>
-                <TokenSprite bodyColor={bodyColor} grid={grid} size={30} />
+                <TokenSprite image={image} ringColor={ringColor} size={34} />
                 <span className="text-[10px] mt-0.5 px-1 rounded whitespace-nowrap" style={{ background: "rgba(22,20,15,0.85)", color: T.parchment, ...fontBody }}>{t.label}</span>
                 {t.hp_current != null && (
                   <span className="text-[9px] px-1 rounded whitespace-nowrap" style={{ background: "rgba(22,20,15,0.85)", color: t.hp_current <= 0 ? T.blood : "#a8c9a3", ...fontMono }}>

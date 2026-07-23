@@ -35,6 +35,16 @@ export function TextField({ label, value, onChange, placeholder, wide }) {
   );
 }
 
+export function StaticField({ label, value, small }) {
+  return (
+    <div className="flex flex-col gap-1" style={fontBody}>
+      {label && <span className="text-[10px] uppercase tracking-wider" style={{ color: T.parchmentDim }}>{label}</span>}
+      <div className={`${small ? "w-20" : "w-full"} rounded px-2 py-1.5`} style={{ background: "transparent", color: T.parchmentDim, border: `1px solid ${T.line}` }}>
+        {value === "" || value === null || value === undefined ? "—" : value}
+      </div>
+    </div>
+  );
+}
 export function SelectField({ label, value, onChange, options, small }) {
   return (
     <label className="flex flex-col gap-1" style={fontBody}>

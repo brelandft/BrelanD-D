@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { T, fontBody, ABILITIES, blankAbilities } from "../lib/gameData";
 import { NumberField, TextField, SelectField, StringListField, NamedListField } from "./atoms";
 import { createMonster } from "../lib/api";
-import { MONSTER_ICON_OPTIONS, monsterIconFor, PixelGrid } from "../lib/sprites";
+import { MONSTER_ICON_OPTIONS, monsterImageFor } from "../lib/sprites";
 
 const BLANK = {
   name: "", challenge_rating: "", size: "Medium", type: "", alignment: "",
@@ -56,7 +56,7 @@ export default function AddMonsterForm({ onCreated, onCancel }) {
             <button key={opt.id} onClick={() => set({ sprite_key: opt.id })} title={opt.name}
               className="rounded p-1.5 flex items-center justify-center"
               style={{ background: form.sprite_key === opt.id ? T.mossDim : T.void, border: `1px solid ${form.sprite_key === opt.id ? T.moss : T.line}` }}>
-              <PixelGrid grid={monsterIconFor(opt.id)} color="#f4ead2" size={20} />
+              <img src={monsterImageFor(opt.id)} alt={opt.name} style={{ width: 28, height: 28, objectFit: "contain" }} />
             </button>
           ))}
         </div>
