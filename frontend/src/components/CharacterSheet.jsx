@@ -108,6 +108,7 @@ function HPTracker({ character, onUpdate }) {
 
 export default function CharacterSheet({ character, referenceData, onChanged, onDelete, isDM = false }) {
   const profBonus = profBonusForLevel(character.level);
+  const canEditStats = isDM || !character.finalized;
   const { races, classes, subclasses, backgrounds } = referenceData;
   const subraces = races.find((r) => r.id === character.race_id)?.subraces || [];
   const availableSubclasses = subclasses.filter((sc) => sc.class_id === character.class_id);
@@ -168,7 +169,7 @@ export default function CharacterSheet({ character, referenceData, onChanged, on
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          {isDM ? (
+          {canEditStats ? (
             <>
               <SelectField label="Race" value={character.race_id} onChange={(v) => patch({ race_id: v, subrace_name: null })} options={races} small />
               {subraces.length > 0 && (
@@ -194,7 +195,7 @@ export default function CharacterSheet({ character, referenceData, onChanged, on
           )}
         </div>
         <div className="flex flex-wrap gap-2 mt-2">
-          {isDM ? (
+          {canEditStats ? (
             <>
               <NumberField label="Armor Class" value={character.ac} onChange={(v) => patch({ ac: Number(v) || 0 })} small />
               <NumberField label="Speed" value={character.speed} onChange={(v) => patch({ speed: Number(v) || 0 })} small />
@@ -210,10 +211,28 @@ export default function CharacterSheet({ character, referenceData, onChanged, on
             <div className="w-14 rounded px-2 py-1 text-center" style={{ ...fontMono, color: T.gold, border: `1px solid ${T.line}` }}>{fmtMod(profBonus)}</div>
           </div>
         </div>
-        {!isDM && (
-          <p className="text-xs mt-3" style={{ color: T.parchmentDim, ...fontBody }}>
-            Race, class, level, and other core stats are set by your DM. Ask them to make changes.
-          </p>
+        {!character.finalized ? (
+          <div className="mt-3 flex items-center gap-3 flex-wrap">
+            <span className="text-xs px-2 py-1 rounded" style={{ background: T.mossDim, color: T.parchment, ...fontBody }}>Draft — still being built</span>
+            <button onClick={() => patch({ finalized: true })} className="text-xs rounded px-3 py-1.5"
+              style={{ background: T.mossDim, border: `1px solid ${T.moss}`, color: T.parchment, ...fontBody }}>
+              Complete Character Creation
+            </button>
+            <span className="text-xs" style={{ color: T.parchmentDim, ...fontBody }}>Locks race, class, level, background, and ability scores to DM-only edits.</span>
+          </div>
+        ) : (
+          <>
+            {!isDM && (
+              <p className="text-xs mt-3" style={{ color: T.parchmentDim, ...fontBody }}>
+                Race, class, level, and other core stats are set by your DM. Ask them to make changes.
+              </p>
+            )}
+            {isDM && (
+              <button onClick={() => patch({ finalized: false })} className="text-xs mt-3" style={{ color: T.parchmentDim, ...fontBody }}>
+                Reopen for character creation editing
+              </button>
+            )}
+          </>
         )}
       </div>
 
@@ -225,7 +244,7 @@ export default function CharacterSheet({ character, referenceData, onChanged, on
           {ABILITIES.map((ab) => (
             <div key={ab} className="rounded p-2 text-center" style={{ background: T.void, border: `1px solid ${T.line}` }}>
               <div className="text-[10px] uppercase" style={{ ...fontBody, color: T.parchmentDim }}>{ab}</div>
-              {isDM ? (
+              {canEditStats ? (
                 <input type="number" value={character.abilities[ab]} onChange={(e) => setAbility(ab, e.target.value)}
                   className="w-full bg-transparent text-center outline-none" style={{ ...fontMono, color: T.parchment, fontSize: "20px" }} />
               ) : (
@@ -248,8 +267,8 @@ export default function CharacterSheet({ character, referenceData, onChanged, on
             const bonus = mod(character.abilities[ab]) + (proficient ? profBonus : 0);
             return (
               <div key={name} className="flex items-center gap-2 py-0.5">
-                <button onClick={() => isDM && toggleSkill(name)} disabled={!isDM} className="w-3.5 h-3.5 rounded-full flex-shrink-0"
-                  style={{ background: proficient ? T.gold : T.void, border: `1px solid ${T.gold}`, cursor: isDM ? "pointer" : "default" }} />
+                <button onClick={() => canEditStats && toggleSkill(name)} disabled={!canEditStats} className="w-3.5 h-3.5 rounded-full flex-shrink-0"
+                  style={{ background: proficient ? T.gold : T.void, border: `1px solid ${T.gold}`, cursor: canEditStats ? "pointer" : "default" }} />
                 <span className="text-sm flex-1" style={{ ...fontBody, color: T.parchment }}>{name} <span style={{ color: T.parchmentDim, fontSize: "11px" }}>({ab})</span></span>
                 <span style={{ ...fontMono, color: T.parchmentDim, fontSize: "13px", width: "28px", textAlign: "right" }}>{fmtMod(bonus)}</span>
               </div>

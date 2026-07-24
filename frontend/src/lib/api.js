@@ -76,6 +76,7 @@ export function newCharacterDraft(name, campaignId) {
     exhaustion: 0,
     spell_slots: [],
     features_notes: "",
+    finalized: false,
   };
 }
 

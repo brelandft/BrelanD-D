@@ -43,14 +43,26 @@ the free SRD only legally includes 1 background and 1 subclass per class
 — everything else in the Player's Handbook is proprietary content, so
 additional ones get added through the app's Homebrew tab instead.
 
-### 2a. If upgrading an existing project: run the campaigns migration
+### 2a. If upgrading an existing project: run migrations in order
 ```sql
--- paste db/migrations/001_add_campaigns.sql into the SQL Editor and run it
+-- paste each of these into the SQL Editor and run them, in order:
+-- db/migrations/001_add_campaigns.sql
+-- db/migrations/002_campaign_desc_and_sprites.sql
+-- db/migrations/003_character_finalization.sql
 ```
-This is additive — it creates a "My First Campaign" and moves your
-existing characters/maps into it, nothing gets deleted. Skip this step
+All additive — existing data is preserved, never deleted. Skip these
 entirely on a brand-new project; `db/schema.sql` already includes
-campaigns from the start.
+everything from the start.
+
+**If you already ran the SRD import before migration 002/003 existed**,
+re-run the import (step 2 above) once the migrations are applied — the
+importer now assigns each monster a sprite matching its actual creature
+type (dragons get the dragon icon, undead get the skeleton icon, etc.)
+instead of everything defaulting to the same one. Safe to re-run any
+time; it only touches rows tagged `source: 'srd'`. Note this only fixes
+the *bestiary* — any monster already deployed onto a live map keeps
+whatever sprite it had at deploy time, since tokens store their own
+snapshot; redeploy it to pick up the fix.
 
 ### 2b. Create the Storage bucket for map images
 In the Supabase dashboard: Storage → New bucket → name it `maps` → make it

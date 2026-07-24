@@ -37,7 +37,10 @@ export default function DmRosterPanel({ characters, referenceData, onChanged, on
                 <TokenSprite image={classImageFor(c.class_name)} backdropColor={COLOR_HEX[c.sprite_color] || COLOR_HEX.blue} size={30} />
                 <div className="flex-1 min-w-0">
                   <div style={{ ...fontDisplay, color: T.parchment, fontSize: "15px", fontWeight: 600 }}>{c.name}</div>
-                  <div className="text-[10px]" style={{ ...fontMono, color: T.parchmentDim }}>{c.hp.current}/{c.hp.max} HP</div>
+                  <div className="text-[10px]" style={{ ...fontMono, color: T.parchmentDim }}>
+                    {c.hp.current}/{c.hp.max} HP
+                    {!c.finalized && <span className="ml-1 px-1 rounded" style={{ background: T.mossDim, color: T.parchment, fontSize: "9px" }}>DRAFT</span>}
+                  </div>
                 </div>
                 {confirming ? (
                   <div className="flex flex-col gap-1">

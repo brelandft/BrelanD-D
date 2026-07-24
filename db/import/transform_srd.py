@@ -286,6 +286,28 @@ def transform_spells(src_dir):
     return out
 
 
+def sprite_key_for_monster_type(monster_type):
+    """Maps the SRD's free-text 'type' field (e.g. 'humanoid (goblinoid)')
+    to one of our 8 sprite archetypes. SRD types not covered by a dedicated
+    icon get a reasonable visual fallback rather than the default."""
+    if not monster_type:
+        return "beast"
+    t = monster_type.lower()
+    direct = ["beast", "humanoid", "undead", "dragon", "fiend", "ooze", "construct", "monstrosity"]
+    for key in direct:
+        if key in t:
+            return key
+    fallbacks = {
+        "giant": "humanoid", "celestial": "humanoid",
+        "plant": "monstrosity", "aberration": "monstrosity",
+        "elemental": "construct", "swarm": "beast",
+    }
+    for keyword, key in fallbacks.items():
+        if keyword in t:
+            return key
+    return "beast"
+
+
 def transform_monsters(src_dir):
     monsters = load(src_dir, "5e-SRD-Monsters.json")
     out = []
@@ -297,6 +319,7 @@ def transform_monsters(src_dir):
             "challenge_rating": m.get("challenge_rating"),
             "size": m.get("size"),
             "type": m.get("type"),
+            "sprite_key": sprite_key_for_monster_type(m.get("type")),
             "alignment": m.get("alignment"),
             "ac": (m.get("armor_class") or [{}])[0].get("value"),
             "hp_average": m.get("hit_points"),

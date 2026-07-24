@@ -179,6 +179,7 @@ create table characters (
   level              int not null default 1,
   background_id      uuid references backgrounds(id),
   sprite_color       text default 'blue',                   -- one of: red/orange/yellow/green/blue/purple
+  finalized          boolean default false,                  -- false = player is still building this character; true = locked to DM-only edits
   alignment          text,
   abilities          jsonb not null default
                        '{"str":10,"dex":10,"con":10,"int":10,"wis":10,"cha":10}',

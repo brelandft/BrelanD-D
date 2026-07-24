@@ -28,6 +28,7 @@ export default function Roster({ characters, selectedId, onSelect, onAdd, campai
               </div>
               <div className="text-[11px] mb-1" style={{ ...fontBody, color: T.parchmentDim }}>
                 {c.race_name || "—"} {c.class_name || ""} {c.class_name ? `· Lv ${c.level}` : ""}
+                {!c.finalized && <span className="ml-1 px-1 rounded" style={{ background: T.mossDim, color: T.parchment, fontSize: "9px" }}>DRAFT</span>}
               </div>
               <div className="h-1.5 rounded-full overflow-hidden" style={{ background: T.void }}>
                 <div className="h-full" style={{ width: `${pct}%`, background: pct > 50 ? T.moss : pct > 20 ? T.gold : T.blood }} />
