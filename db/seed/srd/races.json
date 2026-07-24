@@ -103,6 +103,67 @@
             "description": "You can speak, read, and write one extra language of your choice."
           }
         ]
+      },
+      {
+        "name": "Elven Lineage: Drow",
+        "description": "Darkvision (120 ft.). Dancing Lights. Faerie Fire. Darkness.",
+        "ability_score_bonuses": {},
+        "traits": [
+          {
+            "name": "Darkvision (120 ft.)",
+            "description": "You have Darkvision with a range of 120 feet."
+          },
+          {
+            "name": "Dancing Lights",
+            "description": "You know the spell Dancing Lights."
+          },
+          {
+            "name": "Faerie Fire",
+            "description": "You know the spell Faerie Fire."
+          },
+          {
+            "name": "Darkness",
+            "description": "You know the spell Darkness."
+          }
+        ]
+      },
+      {
+        "name": "Elven Lineage: High Elf",
+        "description": "High Elf: Cantrip Versatility. Detect Magic. Misty Step.",
+        "ability_score_bonuses": {},
+        "traits": [
+          {
+            "name": "High Elf: Cantrip Versatility",
+            "description": "You know the Prestidigitation cantrip. Whenever you finish a Long Rest, you can replace that cantrip with a different cantrip from the Wizard spell list."
+          },
+          {
+            "name": "Detect Magic",
+            "description": "You know the spell Detect Magic."
+          },
+          {
+            "name": "Misty Step",
+            "description": "You know the spell Misty Step."
+          }
+        ]
+      },
+      {
+        "name": "Elven Lineage: Wood Elf",
+        "description": "Wood Elf: Movement Speed Increase. Longstrider. Pass without Trace.",
+        "ability_score_bonuses": {},
+        "traits": [
+          {
+            "name": "Wood Elf: Movement Speed Increase",
+            "description": "Your Movement Speed increases to 35 feet."
+          },
+          {
+            "name": "Longstrider",
+            "description": "You learn the spell Longstrider."
+          },
+          {
+            "name": "Pass without Trace",
+            "description": "You learn the spell Pass without Trace."
+          }
+        ]
       }
     ],
     "description": "Elves range from under 5 to over 6 feet tall and have slender builds. Your size is Medium."
@@ -200,7 +261,158 @@
       "Draconic"
     ],
     "darkvision_range": 0,
-    "subraces": [],
+    "subraces": [
+      {
+        "name": "Draconic Ancestor: Black",
+        "description": "Breath Weapon: Acid. Damage Resistance: Acid.",
+        "ability_score_bonuses": {},
+        "traits": [
+          {
+            "name": "Breath Weapon: Acid",
+            "description": "When you take the Attack action on your turn, you can replace one of your attacks with an exhalation of magical energy in either a 15-foot Cone or a 30-foot Line that is 5 feet wide (choose the shape each time). Each creature in that area must make a Dexterity saving throw (DC 8 plus your Constitution modifier and Proficiency Bonus). On a failed save, a creature takes 1d10 acid damage. On a successful save, a creature takes half as much damage. This damage increases by 1d10 when you reach character levels 5 (2d10), 11 (3d10), and 17 (4d10).\nYou can use this Breath Weapon a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+          },
+          {
+            "name": "Damage Resistance: Acid",
+            "description": "You have Resistance to acid damage, as determined by your Draconic Ancestry trait."
+          }
+        ]
+      },
+      {
+        "name": "Draconic Ancestor: Blue",
+        "description": "Breath Weapon: Lightning. Damage Resistance: Lightning.",
+        "ability_score_bonuses": {},
+        "traits": [
+          {
+            "name": "Breath Weapon: Lightning",
+            "description": "When you take the Attack action on your turn, you can replace one of your attacks with an exhalation of magical energy in either a 15-foot Cone or a 30-foot Line that is 5 feet wide (choose the shape each time). Each creature in that area must make a Dexterity saving throw (DC 8 plus your Constitution modifier and Proficiency Bonus). On a failed save, a creature takes 1d10 lightning damage. On a successful save, a creature takes half as much damage. This damage increases by 1d10 when you reach character levels 5 (2d10), 11 (3d10), and 17 (4d10).\nYou can use this Breath Weapon a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+          },
+          {
+            "name": "Damage Resistance: Lightning",
+            "description": "You have Resistance to lightning damage, as determined by your Draconic Ancestry trait."
+          }
+        ]
+      },
+      {
+        "name": "Draconic Ancestor: Brass",
+        "description": "Breath Weapon: Fire. Damage Resistance: Fire.",
+        "ability_score_bonuses": {},
+        "traits": [
+          {
+            "name": "Breath Weapon: Fire",
+            "description": "When you take the Attack action on your turn, you can replace one of your attacks with an exhalation of magical energy in either a 15-foot Cone or a 30-foot Line that is 5 feet wide (choose the shape each time). Each creature in that area must make a Dexterity saving throw (DC 8 plus your Constitution modifier and Proficiency Bonus). On a failed save, a creature takes 1d10 fire damage. On a successful save, a creature takes half as much damage. This damage increases by 1d10 when you reach character levels 5 (2d10), 11 (3d10), and 17 (4d10).\nYou can use this Breath Weapon a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+          },
+          {
+            "name": "Damage Resistance: Fire",
+            "description": "You have Resistance to fire damage, as determined by your Draconic Ancestry trait."
+          }
+        ]
+      },
+      {
+        "name": "Draconic Ancestor: Bronze",
+        "description": "Breath Weapon: Lightning. Damage Resistance: Lightning.",
+        "ability_score_bonuses": {},
+        "traits": [
+          {
+            "name": "Breath Weapon: Lightning",
+            "description": "When you take the Attack action on your turn, you can replace one of your attacks with an exhalation of magical energy in either a 15-foot Cone or a 30-foot Line that is 5 feet wide (choose the shape each time). Each creature in that area must make a Dexterity saving throw (DC 8 plus your Constitution modifier and Proficiency Bonus). On a failed save, a creature takes 1d10 lightning damage. On a successful save, a creature takes half as much damage. This damage increases by 1d10 when you reach character levels 5 (2d10), 11 (3d10), and 17 (4d10).\nYou can use this Breath Weapon a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+          },
+          {
+            "name": "Damage Resistance: Lightning",
+            "description": "You have Resistance to lightning damage, as determined by your Draconic Ancestry trait."
+          }
+        ]
+      },
+      {
+        "name": "Draconic Ancestor: Copper",
+        "description": "Breath Weapon: Acid. Damage Resistance: Acid.",
+        "ability_score_bonuses": {},
+        "traits": [
+          {
+            "name": "Breath Weapon: Acid",
+            "description": "When you take the Attack action on your turn, you can replace one of your attacks with an exhalation of magical energy in either a 15-foot Cone or a 30-foot Line that is 5 feet wide (choose the shape each time). Each creature in that area must make a Dexterity saving throw (DC 8 plus your Constitution modifier and Proficiency Bonus). On a failed save, a creature takes 1d10 acid damage. On a successful save, a creature takes half as much damage. This damage increases by 1d10 when you reach character levels 5 (2d10), 11 (3d10), and 17 (4d10).\nYou can use this Breath Weapon a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+          },
+          {
+            "name": "Damage Resistance: Acid",
+            "description": "You have Resistance to acid damage, as determined by your Draconic Ancestry trait."
+          }
+        ]
+      },
+      {
+        "name": "Draconic Ancestor: Gold",
+        "description": "Breath Weapon: Fire. Damage Resistance: Fire.",
+        "ability_score_bonuses": {},
+        "traits": [
+          {
+            "name": "Breath Weapon: Fire",
+            "description": "When you take the Attack action on your turn, you can replace one of your attacks with an exhalation of magical energy in either a 15-foot Cone or a 30-foot Line that is 5 feet wide (choose the shape each time). Each creature in that area must make a Dexterity saving throw (DC 8 plus your Constitution modifier and Proficiency Bonus). On a failed save, a creature takes 1d10 fire damage. On a successful save, a creature takes half as much damage. This damage increases by 1d10 when you reach character levels 5 (2d10), 11 (3d10), and 17 (4d10).\nYou can use this Breath Weapon a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+          },
+          {
+            "name": "Damage Resistance: Fire",
+            "description": "You have Resistance to fire damage, as determined by your Draconic Ancestry trait."
+          }
+        ]
+      },
+      {
+        "name": "Draconic Ancestor: Green",
+        "description": "Breath Weapon: Poison. Damage Resistance: Poison.",
+        "ability_score_bonuses": {},
+        "traits": [
+          {
+            "name": "Breath Weapon: Poison",
+            "description": "When you take the Attack action on your turn, you can replace one of your attacks with an exhalation of magical energy in either a 15-foot Cone or a 30-foot Line that is 5 feet wide (choose the shape each time). Each creature in that area must make a Dexterity saving throw (DC 8 plus your Constitution modifier and Proficiency Bonus). On a failed save, a creature takes 1d10 poison damage. On a successful save, a creature takes half as much damage. This damage increases by 1d10 when you reach character levels 5 (2d10), 11 (3d10), and 17 (4d10).\nYou can use this Breath Weapon a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+          },
+          {
+            "name": "Damage Resistance: Poison",
+            "description": "You have Resistance to poison damage, as determined by your Draconic Ancestry trait."
+          }
+        ]
+      },
+      {
+        "name": "Draconic Ancestor: Red",
+        "description": "Breath Weapon: Fire. Damage Resistance: Fire.",
+        "ability_score_bonuses": {},
+        "traits": [
+          {
+            "name": "Breath Weapon: Fire",
+            "description": "When you take the Attack action on your turn, you can replace one of your attacks with an exhalation of magical energy in either a 15-foot Cone or a 30-foot Line that is 5 feet wide (choose the shape each time). Each creature in that area must make a Dexterity saving throw (DC 8 plus your Constitution modifier and Proficiency Bonus). On a failed save, a creature takes 1d10 fire damage. On a successful save, a creature takes half as much damage. This damage increases by 1d10 when you reach character levels 5 (2d10), 11 (3d10), and 17 (4d10).\nYou can use this Breath Weapon a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+          },
+          {
+            "name": "Damage Resistance: Fire",
+            "description": "You have Resistance to fire damage, as determined by your Draconic Ancestry trait."
+          }
+        ]
+      },
+      {
+        "name": "Draconic Ancestor: Silver",
+        "description": "Breath Weapon: Cold. Damage Resistance: Cold.",
+        "ability_score_bonuses": {},
+        "traits": [
+          {
+            "name": "Breath Weapon: Cold",
+            "description": "When you take the Attack action on your turn, you can replace one of your attacks with an exhalation of magical energy in either a 15-foot Cone or a 30-foot Line that is 5 feet wide (choose the shape each time). Each creature in that area must make a Dexterity saving throw (DC 8 plus your Constitution modifier and Proficiency Bonus). On a failed save, a creature takes 1d10 cold damage. On a successful save, a creature takes half as much damage. This damage increases by 1d10 when you reach character levels 5 (2d10), 11 (3d10), and 17 (4d10).\nYou can use this Breath Weapon a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+          },
+          {
+            "name": "Damage Resistance: Cold",
+            "description": "You have Resistance to cold damage, as determined by your Draconic Ancestry trait."
+          }
+        ]
+      },
+      {
+        "name": "Draconic Ancestor: White",
+        "description": "Breath Weapon: Cold. Damage Resistance: Cold.",
+        "ability_score_bonuses": {},
+        "traits": [
+          {
+            "name": "Breath Weapon: Cold",
+            "description": "When you take the Attack action on your turn, you can replace one of your attacks with an exhalation of magical energy in either a 15-foot Cone or a 30-foot Line that is 5 feet wide (choose the shape each time). Each creature in that area must make a Dexterity saving throw (DC 8 plus your Constitution modifier and Proficiency Bonus). On a failed save, a creature takes 1d10 cold damage. On a successful save, a creature takes half as much damage. This damage increases by 1d10 when you reach character levels 5 (2d10), 11 (3d10), and 17 (4d10).\nYou can use this Breath Weapon a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+          },
+          {
+            "name": "Damage Resistance: Cold",
+            "description": "You have Resistance to cold damage, as determined by your Draconic Ancestry trait."
+          }
+        ]
+      }
+    ],
     "description": "Dragonborn are taller and heavier than humans, standing well over 6 feet tall and averaging almost 250 pounds. Your size is Medium."
   },
   {
@@ -241,6 +453,36 @@
           {
             "name": "Tinker",
             "description": "You have proficiency with artisan's tools (tinker's tools). Using those tools, you can spend 1 hour and 10 gp worth of materials to construct a Tiny clockwork device (AC 5, 1 hp). The device ceases to function after 24 hours (unless you spend 1 hour repairing it to keep the device functioning), or when you use your action to dismantle it; at that time, you can reclaim the materials used to create it. You can have up to three such devices active at a time.\nWhen you create a device, choose one of the following options:\nClockwork Toy: This toy is a clockwork animal, monster, or person, such as a frog, mouse, bird, dragon, or soldier. When placed on the ground, the toy moves 5 feet across the ground on each of your turns in a random direction. It makes noises as appropriate to the creature it represents.\nFire Starter: The device produces a miniature flame, which you can use to light a candle, torch, or campfire. Using the device requires your action.\nMusic Box: When opened, this music box plays a single song at a moderate volume. The box stops playing when it reaches the song's end or when it is closed."
+          }
+        ]
+      },
+      {
+        "name": "Gnomish Lineage: Forest Gnome",
+        "description": "Gnomish Lineage: Forest Gnome. Minor Illusion.",
+        "ability_score_bonuses": {},
+        "traits": [
+          {
+            "name": "Gnomish Lineage: Forest Gnome",
+            "description": "You always have the Speak with Animals spell prepared. You can cast it without a spell slot a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest. You can also use any spell slots you have to cast the spell."
+          },
+          {
+            "name": "Minor Illusion",
+            "description": "You know the spell Minor Illusion."
+          }
+        ]
+      },
+      {
+        "name": "Gnomish Lineage: Rock Gnome",
+        "description": "Gnomish Lineage: Rock Gnome. Mending.",
+        "ability_score_bonuses": {},
+        "traits": [
+          {
+            "name": "Gnomish Lineage: Rock Gnome",
+            "description": "You know the Prestidigitation cantrip. In addition, you can spend 10 minutes casting Prestidigitation to create a Tiny clockwork device (AC 5, 1 HP), such as a toy, fire starter, or music box. When you create the device, you determine its function by choosing one effect from Prestidigitation; the device produces that effect whenever you or another creature takes a Bonus Action to activate it with a touch. If the chosen effect has options within it, you choose one of those options for the device when you create it. For example, if you choose the spell\u2019s ignite-extinguish effect, you determine whether the device ignites or extinguishes fire; the device doesn\u2019t do both. You can have three such devices in existence at a time, and each falls apart 8 hours after its creation or when you dismantle it with a touch as a Utilize action."
+          },
+          {
+            "name": "Mending",
+            "description": "You know the cantrip Mending."
           }
         ]
       }
@@ -340,7 +582,198 @@
       "Infernal"
     ],
     "darkvision_range": 60,
-    "subraces": [],
+    "subraces": [
+      {
+        "name": "Fiendish Legacy: Abyssal",
+        "description": "Damage Resistance: Poison. Poison Spray. Ray of Sickness. Hold Person.",
+        "ability_score_bonuses": {},
+        "traits": [
+          {
+            "name": "Damage Resistance: Poison",
+            "description": "You have Resistance to Poison damage."
+          },
+          {
+            "name": "Poison Spray",
+            "description": "You know the spell Poison Spray."
+          },
+          {
+            "name": "Ray of Sickness",
+            "description": "You know the spell Ray of Sickness."
+          },
+          {
+            "name": "Hold Person",
+            "description": "You know the spell Hold Person."
+          }
+        ]
+      },
+      {
+        "name": "Fiendish Legacy: Chthonic",
+        "description": "Damage Resistance: Necrotic. Chill Touch. False Life. Ray of Enfeeblement.",
+        "ability_score_bonuses": {},
+        "traits": [
+          {
+            "name": "Damage Resistance: Necrotic",
+            "description": "You have Resistance to Necrotic damage."
+          },
+          {
+            "name": "Chill Touch",
+            "description": "You know the spell Chill Touch."
+          },
+          {
+            "name": "False Life",
+            "description": "You know the spell False Life."
+          },
+          {
+            "name": "Ray of Enfeeblement",
+            "description": "You know the spell Ray of Enfeeblement."
+          }
+        ]
+      },
+      {
+        "name": "Fiendish Legacy: Infernal",
+        "description": "Damage Resistance: Fire. Fire Bolt. Hellish Rebuke. Darkness.",
+        "ability_score_bonuses": {},
+        "traits": [
+          {
+            "name": "Damage Resistance: Fire",
+            "description": "You have Resistance to Fire damage."
+          },
+          {
+            "name": "Fire Bolt",
+            "description": "You know the spell Fire Bolt."
+          },
+          {
+            "name": "Hellish Rebuke",
+            "description": "You know the spell Hellish Rebuke."
+          },
+          {
+            "name": "Darkness",
+            "description": "You know the spell Darkness."
+          }
+        ]
+      }
+    ],
     "description": "Tieflings are about the same size and build as humans. Your size is Medium."
+  },
+  {
+    "name": "Goliath",
+    "source": "srd",
+    "size": "Medium",
+    "speed": 35,
+    "ability_score_bonuses": {},
+    "traits": [
+      {
+        "name": "Giant Ancestry",
+        "description": "You are descended from Giants. Choose one of the following benefits-a supernatural boon from your ancestry; you can use the chosen benefit a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest:\nCloud's Jaunt (Cloud Giant). As a Bonus Action, you magically teleport up to 30 feet to an unoccupied space you can see.\nFire's Burn (Fire Giant). When you hit a target with an attack roll and deal damage to it, you can also deal 1d10 Fire damage to that target.\nFrost's Chill (Frost Giant). When you hit a target with an attack roll and deal damage to it, you can also deal 1d6 Cold damage to that target and reduce its Speed by 10 feet until the start of your next turn.\nHill's Tumble (Hill Giant). When you hit a Large or smaller creature with an attack roll and deal damage to it, you can give that target the Prone condition.\nStone's Endurance (Stone Giant). When you take damage, you can take a Reaction to roll 1d12. Add your Constitution modifier to the number rolled and reduce the damage by that total.\n- Storm's Thunder (Storm Giant). When you take damage from a creature within 60 feet of you, you can take a Reaction to deal 1d8 Thunder damage to that creature."
+      },
+      {
+        "name": "Large Form",
+        "description": "Starting at character level 5, you can change your size to Large as a Bonus Action if you're in a big enough space. This transformation lasts for 10 minutes or until you end it (no action required). For that duration, you have Advantage on Strength checks, and your Speed increases by 10 feet. Once you use this trait, you can't use it again until you finish a Long Rest."
+      },
+      {
+        "name": "Powerful Build",
+        "description": "You have Advantage on any ability check you make to end the Grappled condition. You also count as one size larger when determining your carrying capacity."
+      }
+    ],
+    "languages": [
+      "Common"
+    ],
+    "darkvision_range": 0,
+    "subraces": [
+      {
+        "name": "Giant Ancestry: Cloud's Jaunt",
+        "description": "Giant Ancestry: Cloud's Jaunt.",
+        "ability_score_bonuses": {},
+        "traits": [
+          {
+            "name": "Giant Ancestry: Cloud's Jaunt",
+            "description": "As a Bonus Action, you magically teleport up to 30 feet to an unoccupied space you can see."
+          }
+        ]
+      },
+      {
+        "name": "Giant Ancestry: Fire's Burn",
+        "description": "Giant Ancestry: Fire's Burn.",
+        "ability_score_bonuses": {},
+        "traits": [
+          {
+            "name": "Giant Ancestry: Fire's Burn",
+            "description": "When you hit a target with an attack roll and deal damage to it, you can also deal 1d10 Fire damage to that target."
+          }
+        ]
+      },
+      {
+        "name": "Giant Ancestry: Frost's Chill",
+        "description": "Giant Ancestry: Frost's Chill.",
+        "ability_score_bonuses": {},
+        "traits": [
+          {
+            "name": "Giant Ancestry: Frost's Chill",
+            "description": "When you hit a target with an attack roll and deal damage to it, you can also deal 1d6 Cold damage to that target and reduce its Speed by 10 feet until the start of your next turn."
+          }
+        ]
+      },
+      {
+        "name": "Giant Ancestry: Hill's Tumble",
+        "description": "Giant Ancestry: Hill's Tumble.",
+        "ability_score_bonuses": {},
+        "traits": [
+          {
+            "name": "Giant Ancestry: Hill's Tumble",
+            "description": "When you hit a Large or smaller creature with an attack roll and deal damage to it, you can give that target the Prone condition."
+          }
+        ]
+      },
+      {
+        "name": "Giant Ancestry: Stone's Endurance",
+        "description": "Giant Ancestry: Stone's Endurance.",
+        "ability_score_bonuses": {},
+        "traits": [
+          {
+            "name": "Giant Ancestry: Stone's Endurance",
+            "description": "When you take damage, you can take a Reaction to roll 1d12. Add your Constitution modifier to the number rolled and reduce the damage by that total."
+          }
+        ]
+      },
+      {
+        "name": "Giant Ancestry: Storm's Thunder",
+        "description": "Giant Ancestry: Storm's Thunder.",
+        "ability_score_bonuses": {},
+        "traits": [
+          {
+            "name": "Giant Ancestry: Storm's Thunder",
+            "description": "When you take damage from a creature within 60 feet of you, you can take a Reaction to deal 1d8 Thunder damage to that creature."
+          }
+        ]
+      }
+    ],
+    "description": null
+  },
+  {
+    "name": "Orc",
+    "source": "srd",
+    "size": "Medium",
+    "speed": 30,
+    "ability_score_bonuses": {},
+    "traits": [
+      {
+        "name": "Adrenaline Rush",
+        "description": "You can take the Dash action as a Bonus Action. When you do so, you gain a number of Temporary Hit Points equal to your Proficiency Bonus.\nYou can use this trait a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Short or Long Rest."
+      },
+      {
+        "name": "Darkvision (120 ft.)",
+        "description": "You have Darkvision with a range of 120 feet."
+      },
+      {
+        "name": "Relentless Endurance",
+        "description": "When you are reduced to 0 Hit Points but not killed outright, you can drop to 1 Hit Point instead. Once you use this trait, you can't do so again until you finish a Long Rest."
+      }
+    ],
+    "languages": [
+      "Common"
+    ],
+    "darkvision_range": 120,
+    "subraces": [],
+    "description": null
   }
 ]
