@@ -14,10 +14,19 @@
 //     bypass the read-only RLS policies on reference tables. Never ship
 //     the service role key to the frontend — this script only ever runs
 //     locally / in CI, not in the browser.
-//   - Safe to re-run: reference tables are cleared and reinserted each
-//     time (idempotent), so re-running after a dataset update is fine.
+//   - Safe to re-run: upserts on the (name, source) unique constraint
+//     (see db/migrations/004_stable_reimports.sql), so existing rows are
+//     UPDATED in place rather than deleted and reinserted. This matters
+//     once real gameplay data exists — a character's race_id, a deployed
+//     monster's monster_id, etc. all point at specific row IDs, and a
+//     delete-then-reinsert approach would break those foreign keys the
+//     moment anything real referenced this data. Upserting keeps IDs
+//     stable across re-imports.
 //   - Homebrew rows (source = 'homebrew') are never touched by this
-//     script — it only deletes/reinserts rows where source = 'srd'.
+//     script — it only touches rows where source = 'srd'.
+//   - Requires migration 004 to have been run first (adds the unique
+//     constraints this script upserts against). Without it, this will
+//     fail with a "no unique or exclusion constraint" error.
 
 import { createClient } from "@supabase/supabase-js";
 import { readFile } from "fs/promises";
@@ -42,27 +51,32 @@ async function loadJson(filename) {
   return JSON.parse(raw);
 }
 
-async function replaceSrdRows(table, rows, { chunkSize = 200 } = {}) {
-  const { error: delErr } = await supabase.from(table).delete().eq("source", "srd");
-  if (delErr) throw new Error(`${table} delete failed: ${delErr.message}`);
-
+async function upsertRows(table, rows, { chunkSize = 200 } = {}) {
   for (let i = 0; i < rows.length; i += chunkSize) {
     const chunk = rows.slice(i, i + chunkSize);
-    const { error } = await supabase.from(table).insert(chunk);
-    if (error) throw new Error(`${table} insert failed at row ${i}: ${error.message}`);
+    const { error } = await supabase.from(table).upsert(chunk, { onConflict: "name,source" });
+    if (error) {
+      if (error.message?.includes("no unique or exclusion constraint")) {
+        throw new Error(
+          `${table} upsert failed: the (name, source) unique constraint is missing. ` +
+          `Run db/migrations/004_stable_reimports.sql first. Original error: ${error.message}`
+        );
+      }
+      throw new Error(`${table} upsert failed at row ${i}: ${error.message}`);
+    }
   }
-  console.log(`${table}: loaded ${rows.length} rows`);
+  console.log(`${table}: upserted ${rows.length} rows`);
 }
 
 async function main() {
   // Order matters: classes before subclasses (FK dependency).
   const races = await loadJson("races.json");
-  await replaceSrdRows("races", races);
+  await upsertRows("races", races);
 
   const classes = await loadJson("classes.json");
-  await replaceSrdRows("classes", classes);
+  await upsertRows("classes", classes);
 
-  // Resolve subclasses' class_name -> class_id using the rows we just inserted.
+  // Resolve subclasses' class_name -> class_id using the rows we just upserted.
   const { data: classRows, error: classErr } = await supabase
     .from("classes")
     .select("id, name")
@@ -75,22 +89,22 @@ async function main() {
     ...rest,
     class_id: classIdByName[class_name],
   }));
-  await replaceSrdRows("subclasses", subclasses);
+  await upsertRows("subclasses", subclasses);
 
   const feats = await loadJson("feats.json");
-  await replaceSrdRows("feats", feats);
+  await upsertRows("feats", feats);
 
   const backgrounds = await loadJson("backgrounds.json");
-  await replaceSrdRows("backgrounds", backgrounds);
+  await upsertRows("backgrounds", backgrounds);
 
   const items = await loadJson("items.json");
-  await replaceSrdRows("items", items);
+  await upsertRows("items", items);
 
   const spells = await loadJson("spells.json");
-  await replaceSrdRows("spells", spells);
+  await upsertRows("spells", spells);
 
   const monsters = await loadJson("monsters.json");
-  await replaceSrdRows("monsters", monsters);
+  await upsertRows("monsters", monsters);
 
   console.log("Done. All SRD reference data loaded.");
 }

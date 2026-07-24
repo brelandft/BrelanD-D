@@ -6215,19 +6215,6 @@
     "description": "Potion, varies\nYou regain hit points when you drink this potion. The number of hit points depends on the potion's rarity, as shown in the Potions of Healing table. Whatever its potency, the potion's red liquid glimmers when agitated.\nPotions of Healing (table)\n| Potion of ... | Rarity | HP Regained |\n|---|---|---|\n| Healing | Common | 2d4 + 2 |\n| Greater healing | Uncommon | 4d4 + 4 |\n| Superior healing | Rare | 8d4 + 8 |\n| Supreme healing | Very rare | 10d4 + 20 |"
   },
   {
-    "name": "Potion of Healing",
-    "source": "srd",
-    "item_type": "magic_item",
-    "subtype": "Potion",
-    "cost_gp": null,
-    "weight_lb": null,
-    "damage": null,
-    "armor_class": null,
-    "properties": [],
-    "requires_attunement": false,
-    "description": "Potion, common\nYou regain 2d4 + 2 hit points when you drink this potion. The potion's red liquid glimmers when agitated."
-  },
-  {
     "name": "Potion of Greater Healing",
     "source": "srd",
     "item_type": "magic_item",

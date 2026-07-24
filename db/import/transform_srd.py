@@ -358,6 +358,23 @@ def transform_monsters(src_dir):
     return out
 
 
+def dedupe_by_name(rows):
+    """Guards against duplicate names in the upstream source data (this has
+    happened — the underlying dataset has two separate index entries for
+    'Potion of Healing' that both display with the same name). Keeps the
+    first occurrence, drops the rest. Applied to every table since any of
+    them could hit this on a future dataset update, not just items."""
+    seen = set()
+    out = []
+    for row in rows:
+        key = row["name"]
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(row)
+    return out
+
+
 def main():
     if len(sys.argv) != 3:
         print("Usage: python3 transform_srd.py <path-to-5e-database/src/2014/en> <output_dir>")
@@ -379,10 +396,13 @@ def main():
     datasets["subclasses.json"] = subclasses_out
 
     for filename, data in datasets.items():
+        deduped = dedupe_by_name(data)
+        dropped = len(data) - len(deduped)
         path = os.path.join(out_dir, filename)
         with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
-        print(f"{filename}: {len(data)} rows")
+            json.dump(deduped, f, indent=2)
+        note = f" ({dropped} duplicate name(s) dropped)" if dropped else ""
+        print(f"{filename}: {len(deduped)} rows{note}")
 
 
 if __name__ == "__main__":

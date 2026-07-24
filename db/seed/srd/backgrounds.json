@@ -6,14 +6,67 @@
       "Insight",
       "Religion"
     ],
+    "tool_proficiencies": [
+      "Calligrapher's Supplies"
+    ],
+    "languages": [],
+    "starting_equipment": [
+      "Choose A or B: (A) Calligrapher's Supplies, Book (prayers), Holy Symbol, Parchment (10 sheets), Robe, 8 GP; or (B) 50 GP"
+    ],
+    "feature_name": null,
+    "feature_description": null,
+    "description": "Eligible ability scores: INT, WIS, CHA. Origin feat: Magic Initiate (Cleric)."
+  },
+  {
+    "name": "Criminal",
+    "source": "srd",
+    "skill_proficiencies": [
+      "Sleight of Hand",
+      "Stealth"
+    ],
+    "tool_proficiencies": [
+      "Thieves' Tools"
+    ],
+    "languages": [],
+    "starting_equipment": [
+      "Choose A or B: (A) 2 Daggers, Thieves' Tools, Crowbar, 2 Pouches, Traveler's Clothes, 16 GP; or (B) 50 GP"
+    ],
+    "feature_name": null,
+    "feature_description": null,
+    "description": "Eligible ability scores: DEX, CON, INT. Origin feat: Alert."
+  },
+  {
+    "name": "Sage",
+    "source": "srd",
+    "skill_proficiencies": [
+      "Arcana",
+      "History"
+    ],
+    "tool_proficiencies": [
+      "Calligrapher's Supplies"
+    ],
+    "languages": [],
+    "starting_equipment": [
+      "Choose A or B: (A) Quarterstaff, Calligrapher's Supplies, Book (history), Parchment (8 sheets), Robe, 8 GP; or (B) 50 GP"
+    ],
+    "feature_name": null,
+    "feature_description": null,
+    "description": "Eligible ability scores: CON, INT, WIS. Origin feat: Magic Initiate."
+  },
+  {
+    "name": "Soldier",
+    "source": "srd",
+    "skill_proficiencies": [
+      "Athletics",
+      "Intimidation"
+    ],
     "tool_proficiencies": [],
     "languages": [],
     "starting_equipment": [
-      "1x Clothes, common",
-      "1x Pouch"
+      "Choose A or B: (A) Spear, Shortbow, 20 Arrows, Gaming Set (same as above), Healer's Kit, Quiver, Traveler's Clothes, 14 GP; or (B) 50 GP"
     ],
-    "feature_name": "Shelter of the Faithful",
-    "feature_description": "As an acolyte, you command the respect of those who share your faith, and you can perform the religious ceremonies of your deity. You and your adventuring companions can expect to receive free healing and care at a temple, shrine, or other established presence of your faith, though you must provide any material components needed for spells. Those who share your religion will support you (but only you) at a modest lifestyle.\nYou might also have ties to a specific temple dedicated to your chosen deity or pantheon, and you have a residence there. This could be the temple where you used to serve, if you remain on good terms with it, or a temple where you have found a new home. While near your temple, you can call upon the priests for assistance, provided the assistance you ask for is not hazardous and you remain in good standing with your temple.",
-    "description": null
+    "feature_name": null,
+    "feature_description": null,
+    "description": "Eligible ability scores: STR, DEX, CON. Origin feat: Savage Attacker."
   }
 ]

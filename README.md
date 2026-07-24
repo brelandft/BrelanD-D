@@ -38,10 +38,18 @@ node load_to_supabase.mjs
 ```
 This loads all races, classes, subclasses, feats, backgrounds, items,
 spells, and monsters from `db/seed/srd/`. Re-run any time the seed data
-changes — it's safe, it only replaces rows tagged `source: 'srd'`. Note
-the free SRD only legally includes 1 background and 1 subclass per class
-— everything else in the Player's Handbook is proprietary content, so
-additional ones get added through the app's Homebrew tab instead.
+changes — it's safe, upserting on name rather than deleting, so it never
+conflicts with real gameplay data that references these rows.
+
+The backgrounds and subclasses lists now include content from **both**
+SRD 5.1 (2014 rules) and SRD 5.2 (2024 rules, released April 2025 under
+the same open CC-BY license) — 4 backgrounds and up to 2 subclasses per
+class, since the two eras renamed most subclasses differently (a few,
+like Fighter's Champion, share the same name across both and just appear
+once). To pull in the 2024 content yourself or refresh it later:
+```bash
+python3 add_2024_srd_backgrounds_subclasses.py <path-to-5e-database/src/2024/en> ../seed/srd
+```
 
 ### 2a. If upgrading an existing project: run migrations in order
 ```sql

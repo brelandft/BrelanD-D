@@ -32,7 +32,8 @@ create table races (
   subraces              jsonb default '[]',             -- [{name, ability_score_bonuses, traits}]
   description           text,
   created_at            timestamptz default now(),
-  updated_at            timestamptz default now()
+  updated_at            timestamptz default now(),
+  unique (name, source)
 );
 
 -- ---------------------------------------------------------------------
@@ -52,7 +53,8 @@ create table classes (
   spellcasting              jsonb,                        -- null if non-caster; else {ability, slots_by_level}
   description               text,
   created_at                timestamptz default now(),
-  updated_at                timestamptz default now()
+  updated_at                timestamptz default now(),
+  unique (name, source)
 );
 
 create table subclasses (
@@ -64,7 +66,8 @@ create table subclasses (
   features_by_level  jsonb default '{}',                 -- same shape as classes.features_by_level
   description        text,
   created_at         timestamptz default now(),
-  updated_at         timestamptz default now()
+  updated_at         timestamptz default now(),
+  unique (name, source)
 );
 create index idx_subclasses_class on subclasses(class_id);
 
@@ -78,7 +81,8 @@ create table feats (
   prerequisite   text,
   description    text,
   benefits       jsonb default '[]',                     -- bullet list of effects
-  created_at     timestamptz default now()
+  created_at     timestamptz default now(),
+  unique (name, source)
 );
 
 create table backgrounds (
@@ -92,7 +96,8 @@ create table backgrounds (
   feature_name           text,
   feature_description    text,
   description            text,
-  created_at             timestamptz default now()
+  created_at             timestamptz default now(),
+  unique (name, source)
 );
 
 -- ---------------------------------------------------------------------
@@ -112,7 +117,8 @@ create table items (
   properties    jsonb default '[]',                       -- ["finesse","light","versatile (1d10)"]
   requires_attunement boolean default false,
   description   text,
-  created_at    timestamptz default now()
+  created_at    timestamptz default now(),
+  unique (name, source)
 );
 
 -- ---------------------------------------------------------------------
@@ -134,7 +140,8 @@ create table spells (
   classes        jsonb default '[]',                      -- ["Wizard","Sorcerer"] (denormalized for filtering)
   description    text,
   higher_levels  text,
-  created_at     timestamptz default now()
+  created_at     timestamptz default now(),
+  unique (name, source)
 );
 create index idx_spells_level on spells(level);
 
@@ -243,7 +250,8 @@ create table monsters (
   legendary_actions  jsonb default '[]',
   sprite_id          uuid references sprites(id),
   description        text,
-  created_at         timestamptz default now()
+  created_at         timestamptz default now(),
+  unique (name, source)
 );
 
 -- ---------------------------------------------------------------------
