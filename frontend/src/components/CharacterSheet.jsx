@@ -157,7 +157,7 @@ export default function CharacterSheet({ character, referenceData, onChanged, on
           {isDM && <IconBtn onClick={() => onDelete(character.id)} title="Delete character" danger><Trash2 size={15} /></IconBtn>}
         </div>
         <div className="flex items-center gap-3 mb-3">
-          <TokenSprite image={classImageFor(character.class_name)} ringColor={COLOR_HEX[character.sprite_color] || COLOR_HEX.blue} size={56} />
+          <TokenSprite image={classImageFor(character.class_name)} backdropColor={COLOR_HEX[character.sprite_color] || COLOR_HEX.blue} size={56} />
           <div className="flex items-center gap-2">
             <span className="text-[10px] uppercase tracking-wider" style={{ ...fontBody, color: T.parchmentDim }}>Token Color</span>
             {COLOR_OPTIONS.map((c) => (

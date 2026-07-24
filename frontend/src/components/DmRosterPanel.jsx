@@ -34,7 +34,7 @@ export default function DmRosterPanel({ characters, referenceData, onChanged, on
             return (
               <div key={c.id} onClick={() => setSelectedId(c.id)} className="rounded px-3 py-2 cursor-pointer flex items-center gap-2"
                 style={{ background: selectedId === c.id ? T.panel2 : "transparent", border: `1px solid ${selectedId === c.id ? T.gold : T.line}` }}>
-                <TokenSprite image={classImageFor(c.class_name)} ringColor={COLOR_HEX[c.sprite_color] || COLOR_HEX.blue} size={30} />
+                <TokenSprite image={classImageFor(c.class_name)} backdropColor={COLOR_HEX[c.sprite_color] || COLOR_HEX.blue} size={30} />
                 <div className="flex-1 min-w-0">
                   <div style={{ ...fontDisplay, color: T.parchment, fontSize: "15px", fontWeight: 600 }}>{c.name}</div>
                   <div className="text-[10px]" style={{ ...fontMono, color: T.parchmentDim }}>{c.hp.current}/{c.hp.max} HP</div>

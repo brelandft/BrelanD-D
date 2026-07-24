@@ -47,19 +47,16 @@ export const COLOR_OPTIONS = [
 ];
 export const COLOR_HEX = Object.fromEntries(COLOR_OPTIONS.map((c) => [c.key, c.hex]));
 
-// A token's full visual: the real art, with a colored ring around it marking
-// whose token it is. We deliberately DON'T recolor the artwork itself — a
-// CSS hue-rotate filter would shift every color in the image (skin, metal,
-// wood, everything), not just the intended garment, which looks worse than
-// no recoloring at all on full-detail art like this. The ring preserves the
-// art exactly as generated while still giving each player a distinct marker.
-export function TokenSprite({ image, ringColor, size = 40 }) {
+// A token's full visual: a solid colored circle backdrop, with the actual
+// character/monster art sitting on top of it. The source images are cleaned
+// to true transparency (see remove_bg.py) specifically so this works — a
+// colored circle behind still-opaque-background art would've just shown as
+// a colored square with a white square floating on it.
+export function TokenSprite({ image, backdropColor, size = 40 }) {
   return (
     <div style={{ position: "relative", width: size, height: size }}>
-      {ringColor && (
-        <div style={{ position: "absolute", inset: -3, borderRadius: "50%", border: `3px solid ${ringColor}`, boxShadow: "0 0 0 1px rgba(0,0,0,0.4)" }} />
-      )}
-      <img src={image} alt="" draggable={false} style={{ width: size, height: size, objectFit: "contain", position: "relative" }} />
+      <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: backdropColor || "#3a3226", border: "2px solid rgba(0,0,0,0.45)" }} />
+      <img src={image} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "contain", position: "relative" }} />
     </div>
   );
 }
