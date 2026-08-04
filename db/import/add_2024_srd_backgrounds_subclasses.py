@@ -66,6 +66,7 @@ def transform_backgrounds_2024(src_dir):
             "feature_name": None,
             "feature_description": None,
             "description": " ".join(description_parts) or None,
+            "origin_feat_name": feat.get("name") if feat else None,
         })
     return out
 

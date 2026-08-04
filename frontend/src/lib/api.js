@@ -290,7 +290,7 @@ export async function syncTokenHp(entityType, entityId, hpCurrent, hpMax) {
 export async function createMonster(monster) {
   const { data, error } = await supabase
     .from("monsters")
-    .insert({ ...monster, source: "homebrew", generated_by_claude: false })
+    .insert({ ...monster, source: "homebrew" })
     .select()
     .single();
   if (error) throw error;

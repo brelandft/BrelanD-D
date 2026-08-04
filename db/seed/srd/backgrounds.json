@@ -15,7 +15,8 @@
     ],
     "feature_name": null,
     "feature_description": null,
-    "description": "Eligible ability scores: INT, WIS, CHA. Origin feat: Magic Initiate (Cleric)."
+    "description": "Eligible ability scores: INT, WIS, CHA. Origin feat: Magic Initiate (Cleric).",
+    "origin_feat_name": "Magic Initiate"
   },
   {
     "name": "Criminal",
@@ -33,7 +34,8 @@
     ],
     "feature_name": null,
     "feature_description": null,
-    "description": "Eligible ability scores: DEX, CON, INT. Origin feat: Alert."
+    "description": "Eligible ability scores: DEX, CON, INT. Origin feat: Alert.",
+    "origin_feat_name": "Alert"
   },
   {
     "name": "Sage",
@@ -51,7 +53,8 @@
     ],
     "feature_name": null,
     "feature_description": null,
-    "description": "Eligible ability scores: CON, INT, WIS. Origin feat: Magic Initiate."
+    "description": "Eligible ability scores: CON, INT, WIS. Origin feat: Magic Initiate.",
+    "origin_feat_name": "Magic Initiate"
   },
   {
     "name": "Soldier",
@@ -67,6 +70,7 @@
     ],
     "feature_name": null,
     "feature_description": null,
-    "description": "Eligible ability scores: STR, DEX, CON. Origin feat: Savage Attacker."
+    "description": "Eligible ability scores: STR, DEX, CON. Origin feat: Savage Attacker.",
+    "origin_feat_name": "Savage Attacker"
   }
 ]

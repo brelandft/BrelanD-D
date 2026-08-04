@@ -273,7 +273,7 @@ export default function App() {
               )}
               <div className="flex-1 overflow-auto">
                 {tab === "sheet" && (selected ? (
-                  <CharacterSheet character={selected} referenceData={refData} onChanged={handleCharacterChanged} />
+                  <CharacterSheet character={selected} referenceData={refData} onChanged={handleCharacterChanged} onReferenceDataChanged={handleReferenceDataChanged} />
                 ) : (
                   <div className="p-8"><p style={{ color: T.parchmentDim, ...fontBody }}>Select or add a character from the party list.</p></div>
                 ))}
@@ -303,6 +303,7 @@ export default function App() {
                 <DmRosterPanel
                   characters={characters} referenceData={refData}
                   onChanged={handleCharacterChanged} onDelete={handleDeleteCharacter}
+                  onReferenceDataChanged={handleReferenceDataChanged}
                   onPlaceOnMap={handlePlaceOnMap} canPlaceOnMap={!!activeMap}
                 />
               )}

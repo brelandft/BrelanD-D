@@ -57,6 +57,10 @@ python3 add_2024_srd_backgrounds_subclasses.py <path-to-5e-database/src/2024/en>
 -- db/migrations/001_add_campaigns.sql
 -- db/migrations/002_campaign_desc_and_sprites.sql
 -- db/migrations/003_character_finalization.sql
+-- db/migrations/004_stable_reimports.sql
+-- db/migrations/005_fix_homebrew_write_access.sql
+-- db/migrations/006_feats_abilities.sql
+-- db/migrations/007_reseed_feats_and_origin_feats.sql
 ```
 All additive — existing data is preserved, never deleted. Skip these
 entirely on a brand-new project; `db/schema.sql` already includes

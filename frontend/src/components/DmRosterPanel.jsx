@@ -4,7 +4,7 @@ import { T, fontDisplay, fontBody, fontMono } from "../lib/gameData";
 import { TokenSprite, classImageFor, COLOR_HEX } from "../lib/sprites";
 import CharacterSheet from "./CharacterSheet";
 
-export default function DmRosterPanel({ characters, referenceData, onChanged, onDelete, onPlaceOnMap, canPlaceOnMap }) {
+export default function DmRosterPanel({ characters, referenceData, onChanged, onDelete, onReferenceDataChanged, onPlaceOnMap, canPlaceOnMap }) {
   const [selectedId, setSelectedId] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const selected = characters.find((c) => c.id === selectedId);
@@ -58,7 +58,7 @@ export default function DmRosterPanel({ characters, referenceData, onChanged, on
       <div className="flex-1 overflow-auto">
         {selected ? (
           <>
-            <CharacterSheet character={selected} referenceData={referenceData} onChanged={onChanged} onDelete={onDelete} isDM />
+            <CharacterSheet character={selected} referenceData={referenceData} onChanged={onChanged} onDelete={onDelete} onReferenceDataChanged={onReferenceDataChanged} isDM />
             {canPlaceOnMap && (
               <div className="px-4 pb-6">
                 <button onClick={() => onPlaceOnMap(selected)} className="flex items-center gap-1.5 text-xs rounded px-3 py-1.5"

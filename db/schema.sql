@@ -5,7 +5,7 @@
 --   - All primary keys are UUIDs (gen_random_uuid()).
 --   - `source` distinguishes official SRD content from homebrew:
 --        'srd'      = imported from open SRD dataset (5e-database etc.)
---        'homebrew' = authored by you / generated via the Claude proxy
+--        'homebrew' = authored by you, via the in-app forms
 --   - JSONB is used for nested, variable-shape data (ability scores,
 --     stat blocks, features-by-level) rather than exploding everything
 --     into join tables. Keeps this maintainable by two people.
@@ -96,6 +96,7 @@ create table backgrounds (
   feature_name           text,
   feature_description    text,
   description            text,
+  origin_feat_name       text,                   -- 2024-rules "Origin Feat" this background grants, if any
   created_at             timestamptz default now(),
   unique (name, source)
 );
@@ -200,6 +201,7 @@ create table characters (
   feat_ids           jsonb default '[]',                    -- array of feats.id
   spells_known       jsonb default '[]',                    -- [{"spell_id": "...", "prepared": true}]
   spell_slots        jsonb default '[]',                    -- [{"level":1,"total":4,"used":1}, ...]
+  abilities_known    jsonb default '[]',                    -- [{"name","description","uses_max","uses_current","recharge"}]
   sprite_id          uuid references sprites(id),
   features_notes     text,
   created_at         timestamptz default now(),
@@ -208,10 +210,13 @@ create table characters (
 create index idx_characters_class on characters(class_id);
 
 -- Character inventory (join table: character <-> items, with instance data)
+-- item_id is nullable: inventory is intentionally free-text (name + qty),
+-- not yet linked to the items catalog — see README "Intentionally
+-- simplified for now".
 create table character_inventory (
   id           uuid primary key default gen_random_uuid(),
   character_id uuid not null references characters(id) on delete cascade,
-  item_id      uuid not null references items(id),
+  item_id      uuid references items(id),
   quantity     int default 1,
   equipped     boolean default false,
   attuned      boolean default false,
@@ -220,13 +225,12 @@ create table character_inventory (
 create index idx_inventory_character on character_inventory(character_id);
 
 -- ---------------------------------------------------------------------
--- Monsters (reusable stat blocks — includes Claude-generated ones)
+-- Monsters (reusable stat blocks)
 -- ---------------------------------------------------------------------
 create table monsters (
   id                 uuid primary key default gen_random_uuid(),
   name               text not null,
   source             text not null check (source in ('srd','homebrew')),
-  generated_by_claude boolean default false,
   challenge_rating   numeric,
   size               text,
   type               text,                                  -- 'beast','undead','fiend', etc.
@@ -331,20 +335,6 @@ create index idx_characters_campaign on characters(campaign_id);
 create index idx_maps_campaign on maps(campaign_id);
 
 -- =====================================================================
--- Rate limiting for the Claude monster-generation proxy
--- =====================================================================
--- The Edge Function checks this table before calling the Anthropic API,
--- so a leaked endpoint URL can't run up API charges unattended.
-create table generation_log (
-  id          uuid primary key default gen_random_uuid(),
-  created_at  timestamptz default now(),
-  request_ip  text
-);
-alter table generation_log enable row level security;
--- No public policy at all: only the Edge Function (service role) touches
--- this table, so it's invisible even to the anon key.
-
--- =====================================================================
 -- App settings (shared across all devices — e.g. the DM PIN)
 -- =====================================================================
 create table app_settings (
@@ -375,5 +365,13 @@ create policy "public read" on backgrounds for select using (true);
 create policy "public read" on items for select using (true);
 create policy "public read" on spells for select using (true);
 create policy "public read" on sprites for select using (true);
--- (homebrew additions to these tables go through the Claude proxy /
---  a small admin script using the service-role key, which bypasses RLS)
+-- Homebrew additions to backgrounds/feats/subclasses/items/spells go
+-- through the in-app forms (AddSubclassForm, AddBackgroundForm,
+-- AddFeatForm, AddSpellForm, AddItemForm in frontend/src/lib/api.js)
+-- using the anon key, so those five need an insert policy too (races/
+-- classes/sprites stay read-only — no homebrew form writes to them).
+create policy "anon insert" on backgrounds for insert to anon with check (true);
+create policy "anon insert" on feats for insert to anon with check (true);
+create policy "anon insert" on subclasses for insert to anon with check (true);
+create policy "anon insert" on items for insert to anon with check (true);
+create policy "anon insert" on spells for insert to anon with check (true);

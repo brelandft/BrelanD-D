@@ -1,11 +1,13 @@
 import React, { useState } from "react";
-import { Trash2, Heart, ScrollText, Backpack, Sparkles, X, Plus } from "lucide-react";
+import { Trash2, Heart, ScrollText, Backpack, Sparkles, X, Plus, Star, BookOpen, Zap } from "lucide-react";
 import { T, fontDisplay, fontBody, fontMono, ABILITIES, SKILLS, mod, fmtMod, profBonusForLevel } from "../lib/gameData";
 import { IconBtn, NumberField, TextField, SelectField, StaticField } from "./atoms";
 import { COLOR_OPTIONS, TokenSprite, classImageFor, COLOR_HEX } from "../lib/sprites";
 import {
   updateCharacter, addInventoryItem, updateInventoryRow, deleteInventoryRow,
 } from "../lib/api";
+import AddFeatForm from "./AddFeatForm";
+import AddSpellForm from "./AddSpellForm";
 
 function HPTracker({ character, onUpdate }) {
   const [amount, setAmount] = useState("");
@@ -106,12 +108,15 @@ function HPTracker({ character, onUpdate }) {
   );
 }
 
-export default function CharacterSheet({ character, referenceData, onChanged, onDelete, isDM = false }) {
+export default function CharacterSheet({ character, referenceData, onChanged, onDelete, onReferenceDataChanged, isDM = false }) {
   const profBonus = profBonusForLevel(character.level);
   const canEditStats = isDM || !character.finalized;
-  const { races, classes, subclasses, backgrounds } = referenceData;
+  const { races, classes, subclasses, backgrounds, feats, spells } = referenceData;
   const subraces = races.find((r) => r.id === character.race_id)?.subraces || [];
   const availableSubclasses = subclasses.filter((sc) => sc.class_id === character.class_id);
+  const currentClass = classes.find((c) => c.id === character.class_id);
+  const currentSubclass = subclasses.find((s) => s.id === character.subclass_id);
+  const originFeatName = backgrounds.find((b) => b.id === character.background_id)?.origin_feat_name;
 
   async function patch(fields) {
     const updated = await updateCharacter(character.id, fields);
@@ -148,6 +153,69 @@ export default function CharacterSheet({ character, referenceData, onChanged, on
   function removeSlot(idx) {
     patch({ spell_slots: character.spell_slots.filter((_, i) => i !== idx) });
   }
+
+  // ---------- feats ----------
+  const [showFeatForm, setShowFeatForm] = useState(false);
+  const characterFeats = (character.feat_ids || []).map((id) => feats.find((f) => f.id === id)).filter(Boolean);
+  const availableFeats = feats.filter((f) => !(character.feat_ids || []).includes(f.id));
+  function addFeat(id) {
+    if (!id || (character.feat_ids || []).includes(id)) return;
+    patch({ feat_ids: [...(character.feat_ids || []), id] });
+  }
+  function removeFeat(id) {
+    patch({ feat_ids: (character.feat_ids || []).filter((fid) => fid !== id) });
+  }
+  function handleFeatCreated(item) {
+    onReferenceDataChanged?.("feats", item);
+    addFeat(item.id);
+    setShowFeatForm(false);
+  }
+
+  // ---------- known spells ----------
+  const [showSpellForm, setShowSpellForm] = useState(false);
+  const [showAllClassSpells, setShowAllClassSpells] = useState(false);
+  const knownSpells = (character.spells_known || [])
+    .map((ks) => ({ ...ks, spell: spells.find((s) => s.id === ks.spell_id) }))
+    .filter((row) => row.spell);
+  const availableSpells = spells.filter((s) => {
+    if ((character.spells_known || []).some((ks) => ks.spell_id === s.id)) return false;
+    if (showAllClassSpells || !currentClass) return true;
+    return (s.classes || []).some((cn) => cn.toLowerCase() === currentClass.name.toLowerCase());
+  });
+  function addSpell(id) {
+    if (!id || (character.spells_known || []).some((ks) => ks.spell_id === id)) return;
+    patch({ spells_known: [...(character.spells_known || []), { spell_id: id, prepared: false }] });
+  }
+  function removeSpell(id) {
+    patch({ spells_known: (character.spells_known || []).filter((ks) => ks.spell_id !== id) });
+  }
+  function toggleSpellPrepared(id) {
+    patch({ spells_known: (character.spells_known || []).map((ks) => (ks.spell_id === id ? { ...ks, prepared: !ks.prepared } : ks)) });
+  }
+  function handleSpellCreated(item) {
+    onReferenceDataChanged?.("spells", item);
+    addSpell(item.id);
+    setShowSpellForm(false);
+  }
+
+  // ---------- tracked abilities ----------
+  function updateAbility(idx, fields) {
+    patch({ abilities_known: (character.abilities_known || []).map((a, i) => (i === idx ? { ...a, ...fields } : a)) });
+  }
+  function addAbility() {
+    patch({ abilities_known: [...(character.abilities_known || []), { name: "", description: "", uses_max: 0, uses_current: 0, recharge: "" }] });
+  }
+  function removeAbility(idx) {
+    patch({ abilities_known: (character.abilities_known || []).filter((_, i) => i !== idx) });
+  }
+  function featuresUpToLevel(entity) {
+    if (!entity?.features_by_level) return [];
+    return Object.entries(entity.features_by_level)
+      .filter(([lvl]) => Number(lvl) <= character.level)
+      .sort((a, b) => Number(a[0]) - Number(b[0]))
+      .flatMap(([lvl, list]) => list.map((f) => ({ ...f, level: Number(lvl) })));
+  }
+  const referenceFeatures = [...featuresUpToLevel(currentClass), ...featuresUpToLevel(currentSubclass)];
 
   return (
     <div className="flex flex-col gap-4 p-4 max-w-3xl">
@@ -283,6 +351,47 @@ export default function CharacterSheet({ character, referenceData, onChanged, on
       <div className="rounded-lg p-4" style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
+            <Star size={15} color={T.gold} />
+            <span className="text-xs uppercase tracking-widest" style={{ ...fontBody, color: T.gold }}>Feats</span>
+          </div>
+          {!showFeatForm && (
+            <button onClick={() => setShowFeatForm(true)} className="text-xs rounded px-2 py-1"
+              style={{ background: T.panel2, border: `1px solid ${T.line}`, color: T.parchmentDim, ...fontBody }}>
+              + Add custom feat
+            </button>
+          )}
+        </div>
+        {showFeatForm && <div className="mb-3"><AddFeatForm onCreated={handleFeatCreated} onCancel={() => setShowFeatForm(false)} /></div>}
+        <SelectField label="Add a feat" value="" onChange={addFeat} options={availableFeats} />
+        <div className="flex flex-col gap-1.5 mt-3">
+          {characterFeats.map((f) => {
+            const isOriginFeat = originFeatName && f.name.toLowerCase() === originFeatName.toLowerCase();
+            return (
+              <div key={f.id} className="rounded p-2 flex items-start justify-between gap-2" style={{ background: T.void, border: `1px solid ${T.line}` }}>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span style={{ ...fontBody, color: T.parchment, fontSize: "13px", fontWeight: 600 }}>{f.name}</span>
+                    {isOriginFeat && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: T.mossDim, color: T.parchment, ...fontBody }}>
+                        Origin feat for {backgrounds.find((b) => b.id === character.background_id)?.name}
+                      </span>
+                    )}
+                    {f.source === "homebrew" && <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: T.panel2, color: T.parchmentDim, ...fontBody }}>homebrew</span>}
+                  </div>
+                  {f.prerequisite && <div className="text-[11px]" style={{ color: T.parchmentDim, ...fontBody }}>Prerequisite: {f.prerequisite}</div>}
+                  {f.description && <div className="text-[11px] mt-0.5" style={{ color: T.parchmentDim, ...fontBody }}>{f.description}</div>}
+                </div>
+                <IconBtn onClick={() => removeFeat(f.id)} title="Remove" danger><X size={13} /></IconBtn>
+              </div>
+            );
+          })}
+          {characterFeats.length === 0 && <p className="text-xs" style={{ color: T.parchmentDim, ...fontBody }}>No feats yet.</p>}
+        </div>
+      </div>
+
+      <div className="rounded-lg p-4" style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
             <Backpack size={15} color={T.gold} />
             <span className="text-xs uppercase tracking-widest" style={{ ...fontBody, color: T.gold }}>Inventory</span>
           </div>
@@ -323,6 +432,97 @@ export default function CharacterSheet({ character, referenceData, onChanged, on
           ))}
           {character.spell_slots.length === 0 && <p className="text-xs" style={{ color: T.parchmentDim, ...fontBody }}>No spell slots tracked.</p>}
         </div>
+      </div>
+
+      <div className="rounded-lg p-4" style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <BookOpen size={15} color={T.gold} />
+            <span className="text-xs uppercase tracking-widest" style={{ ...fontBody, color: T.gold }}>Known Spells</span>
+          </div>
+          {!showSpellForm && (
+            <button onClick={() => setShowSpellForm(true)} className="text-xs rounded px-2 py-1"
+              style={{ background: T.panel2, border: `1px solid ${T.line}`, color: T.parchmentDim, ...fontBody }}>
+              + Add custom spell
+            </button>
+          )}
+        </div>
+        {showSpellForm && <div className="mb-3"><AddSpellForm onCreated={handleSpellCreated} onCancel={() => setShowSpellForm(false)} /></div>}
+        <div className="flex items-end gap-3 flex-wrap">
+          <SelectField label={`Add a spell${currentClass ? ` (${currentClass.name})` : ""}`} value="" onChange={addSpell}
+            options={availableSpells.map((s) => ({ id: s.id, name: `${s.name}${s.level === 0 ? " (cantrip)" : ` (lvl ${s.level})`}` }))} />
+          <label className="flex items-center gap-1.5 text-xs pb-1.5" style={{ color: T.parchmentDim, ...fontBody }}>
+            <input type="checkbox" checked={showAllClassSpells} onChange={(e) => setShowAllClassSpells(e.target.checked)} /> Show all classes
+          </label>
+        </div>
+        <div className="flex flex-col gap-1.5 mt-3">
+          {knownSpells.map(({ spell, prepared }) => (
+            <div key={spell.id} className="rounded p-2 flex items-start justify-between gap-2" style={{ background: T.void, border: `1px solid ${T.line}` }}>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span style={{ ...fontBody, color: T.parchment, fontSize: "13px", fontWeight: 600 }}>{spell.name}</span>
+                  {spell.source === "homebrew" && <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: T.panel2, color: T.parchmentDim, ...fontBody }}>homebrew</span>}
+                </div>
+                <div className="text-[11px]" style={{ color: T.parchmentDim, ...fontBody }}>
+                  {spell.level === 0 ? "Cantrip" : `Level ${spell.level}`}{spell.school ? ` · ${spell.school}` : ""}{spell.concentration ? " · Concentration" : ""}
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <label className="flex items-center gap-1 text-[11px]" style={{ color: T.parchmentDim, ...fontBody }}>
+                  <input type="checkbox" checked={!!prepared} onChange={() => toggleSpellPrepared(spell.id)} /> Prepared
+                </label>
+                <IconBtn onClick={() => removeSpell(spell.id)} title="Remove" danger><X size={13} /></IconBtn>
+              </div>
+            </div>
+          ))}
+          {knownSpells.length === 0 && <p className="text-xs" style={{ color: T.parchmentDim, ...fontBody }}>No spells known yet.</p>}
+        </div>
+      </div>
+
+      <div className="rounded-lg p-4" style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Zap size={15} color={T.gold} />
+            <span className="text-xs uppercase tracking-widest" style={{ ...fontBody, color: T.gold }}>Abilities</span>
+          </div>
+          <IconBtn onClick={addAbility} title="Add ability"><Plus size={14} /></IconBtn>
+        </div>
+        <div className="flex flex-col gap-2">
+          {(character.abilities_known || []).map((a, idx) => (
+            <div key={idx} className="rounded p-2 flex flex-col gap-1.5" style={{ background: T.void, border: `1px solid ${T.line}` }}>
+              <div className="flex gap-1.5">
+                <input value={a.name} onChange={(e) => updateAbility(idx, { name: e.target.value })} placeholder="Ability name"
+                  className="flex-1 rounded px-2 py-1 text-sm outline-none" style={{ background: T.panel2, color: T.parchment, border: `1px solid ${T.line}`, ...fontBody }} />
+                <IconBtn onClick={() => removeAbility(idx)} title="Remove" danger><X size={13} /></IconBtn>
+              </div>
+              <textarea value={a.description} onChange={(e) => updateAbility(idx, { description: e.target.value })} placeholder="Description" rows={2}
+                className="rounded px-2 py-1 text-sm outline-none resize-none" style={{ background: T.panel2, color: T.parchment, border: `1px solid ${T.line}`, ...fontBody }} />
+              <div className="flex gap-2 items-center flex-wrap">
+                <span className="text-[10px] uppercase tracking-wider" style={{ color: T.parchmentDim, ...fontBody }}>Uses</span>
+                <NumberField value={a.uses_current} onChange={(v) => updateAbility(idx, { uses_current: Number(v) || 0 })} small />
+                <span style={{ color: T.parchmentDim, ...fontMono }}>/</span>
+                <NumberField value={a.uses_max} onChange={(v) => updateAbility(idx, { uses_max: Number(v) || 0 })} small />
+                <TextField label="Recharge" value={a.recharge} onChange={(v) => updateAbility(idx, { recharge: v })} placeholder="e.g. Short Rest" />
+              </div>
+            </div>
+          ))}
+          {(character.abilities_known || []).length === 0 && <p className="text-xs" style={{ color: T.parchmentDim, ...fontBody }}>No abilities tracked yet.</p>}
+        </div>
+        {referenceFeatures.length > 0 && (
+          <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${T.line}` }}>
+            <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: T.parchmentDim, ...fontBody }}>
+              Class features for reference — add any you want tracked above
+            </p>
+            <div className="flex flex-col gap-1">
+              {referenceFeatures.map((f, i) => (
+                <div key={i} className="text-[11px]" style={{ color: T.parchmentDim, ...fontBody }}>
+                  <span style={{ color: T.gold }}>Lvl {f.level}</span> — <span style={{ color: T.parchment }}>{f.name}</span>
+                  {f.description ? `: ${f.description}` : ""}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="rounded-lg p-4" style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
