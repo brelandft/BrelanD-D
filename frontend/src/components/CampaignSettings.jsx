@@ -1,13 +1,15 @@
 import React, { useState } from "react";
-import { Pencil } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { T, fontDisplay, fontBody } from "../lib/gameData";
 import { updateCampaign } from "../lib/api";
 
-export default function CampaignSettings({ campaign, onChanged }) {
+export default function CampaignSettings({ campaign, onChanged, onDelete }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(campaign.name);
   const [description, setDescription] = useState(campaign.description || "");
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   async function handleSave() {
     setSaving(true);
@@ -17,6 +19,15 @@ export default function CampaignSettings({ campaign, onChanged }) {
       setEditing(false);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      await onDelete(campaign.id);
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -35,11 +46,26 @@ export default function CampaignSettings({ campaign, onChanged }) {
         className="rounded px-2 py-1.5 text-sm outline-none" style={{ background: T.void, color: T.parchment, border: `1px solid ${T.line}`, ...fontDisplay, fontSize: "15px" }} />
       <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} placeholder="A few sentences describing the setting…"
         className="rounded px-2 py-1.5 text-sm outline-none resize-none" style={{ background: T.void, color: T.parchment, border: `1px solid ${T.line}`, ...fontBody }} />
-      <div className="flex gap-2">
-        <button onClick={handleSave} disabled={saving} className="rounded px-3 py-1 text-xs" style={{ background: T.mossDim, border: `1px solid ${T.moss}`, color: T.parchment, ...fontBody }}>
-          {saving ? "Saving…" : "Save"}
-        </button>
-        <button onClick={() => setEditing(false)} className="rounded px-3 py-1 text-xs" style={{ color: T.parchmentDim, ...fontBody }}>Cancel</button>
+      <div className="flex gap-2 items-center justify-between">
+        <div className="flex gap-2">
+          <button onClick={handleSave} disabled={saving} className="rounded px-3 py-1 text-xs" style={{ background: T.mossDim, border: `1px solid ${T.moss}`, color: T.parchment, ...fontBody }}>
+            {saving ? "Saving…" : "Save"}
+          </button>
+          <button onClick={() => setEditing(false)} className="rounded px-3 py-1 text-xs" style={{ color: T.parchmentDim, ...fontBody }}>Cancel</button>
+        </div>
+        {!confirmDelete ? (
+          <button onClick={() => setConfirmDelete(true)} className="flex items-center gap-1 text-xs" style={{ color: T.blood, ...fontBody }}>
+            <Trash2 size={12} /> Delete campaign
+          </button>
+        ) : (
+          <div className="flex items-center gap-2 text-xs" style={{ ...fontBody }}>
+            <span style={{ color: T.parchmentDim }}>Delete "{campaign.name}" and everything in it — characters, maps, tokens?</span>
+            <button onClick={handleDelete} disabled={deleting} className="rounded px-2 py-1" style={{ background: T.bloodDim, color: T.parchment }}>
+              {deleting ? "Deleting…" : "Confirm"}
+            </button>
+            <button onClick={() => setConfirmDelete(false)} style={{ color: T.parchmentDim }}>Cancel</button>
+          </div>
+        )}
       </div>
     </div>
   );

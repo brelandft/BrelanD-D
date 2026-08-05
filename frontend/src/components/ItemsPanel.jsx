@@ -46,13 +46,27 @@ export default function ItemsPanel() {
       {loading && <p className="text-xs" style={{ color: T.parchmentDim, ...fontBody }}>Loading…</p>}
       <div className="flex flex-col gap-1.5">
         {items.map((item) => (
-          <div key={item.id} className="rounded-lg px-3 py-2 flex items-center justify-between" style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
-            <div>
-              <span style={{ ...fontDisplay, color: T.parchment, fontSize: "15px", fontWeight: 600 }}>{item.name}</span>
-              <span className="text-[11px] ml-2" style={{ ...fontBody, color: T.parchmentDim }}>{item.item_type}{item.subtype ? ` · ${item.subtype}` : ""}</span>
-              {item.source === "homebrew" && <span className="text-[10px] ml-2 px-1.5 py-0.5 rounded" style={{ background: T.mossDim, color: T.parchment, ...fontBody }}>homebrew</span>}
+          <div key={item.id} className="rounded-lg px-3 py-2 flex flex-col gap-1" style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <span style={{ ...fontDisplay, color: T.parchment, fontSize: "15px", fontWeight: 600 }}>{item.name}</span>
+                <span className="text-[11px] ml-2" style={{ ...fontBody, color: T.parchmentDim }}>{item.item_type}{item.subtype ? ` · ${item.subtype}` : ""}</span>
+                {item.source === "homebrew" && <span className="text-[10px] ml-2 px-1.5 py-0.5 rounded" style={{ background: T.mossDim, color: T.parchment, ...fontBody }}>homebrew</span>}
+                {item.requires_attunement && <span className="text-[10px] ml-2 px-1.5 py-0.5 rounded" style={{ background: T.bloodDim, color: T.parchment, ...fontBody }}>attunement</span>}
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {item.weight_lb != null && <span className="text-[11px]" style={{ ...fontBody, color: T.parchmentDim }}>{item.weight_lb} lb</span>}
+                {item.cost_gp != null && <span className="text-xs" style={{ ...fontBody, color: T.gold }}>{item.cost_gp} gp</span>}
+              </div>
             </div>
-            {item.cost_gp != null && <span className="text-xs" style={{ ...fontBody, color: T.gold }}>{item.cost_gp} gp</span>}
+            {(item.damage || item.armor_class || (item.properties && item.properties.length > 0)) && (
+              <div className="text-[11px]" style={{ ...fontBody, color: T.parchmentDim }}>
+                {item.damage && <span>{item.damage.dice} {item.damage.type}</span>}
+                {item.armor_class && <span>{item.damage ? " · " : ""}AC {item.armor_class.base}{item.armor_class.dex_bonus ? " + Dex" : ""}</span>}
+                {item.properties && item.properties.length > 0 && <span>{(item.damage || item.armor_class) ? " · " : ""}{item.properties.join(", ")}</span>}
+              </div>
+            )}
+            {item.description && <div className="text-[11px]" style={{ ...fontBody, color: T.parchmentDim }}>{item.description}</div>}
           </div>
         ))}
         {!loading && items.length === 0 && <p className="text-xs" style={{ color: T.parchmentDim, ...fontBody }}>No items found.</p>}

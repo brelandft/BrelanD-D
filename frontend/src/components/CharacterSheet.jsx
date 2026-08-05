@@ -8,6 +8,24 @@ import {
 } from "../lib/api";
 import AddFeatForm from "./AddFeatForm";
 import AddSpellForm from "./AddSpellForm";
+import AddItemForm from "./AddItemForm";
+
+const SLOT_LABELS = { armor: "Armor", shield: "Shield", main_hand: "Main Hand", off_hand: "Off Hand" };
+function slotOptionsForItem(item) {
+  if (!item) return [];
+  if (item.item_type === "armor") return [{ id: "armor", name: "Armor" }];
+  if (item.item_type === "shield") return [{ id: "shield", name: "Shield" }];
+  if (item.item_type === "weapon") return [{ id: "main_hand", name: "Main Hand" }, { id: "off_hand", name: "Off Hand" }];
+  return [];
+}
+function itemStatLine(item) {
+  if (!item) return "";
+  const parts = [];
+  if (item.damage) parts.push(`${item.damage.dice} ${item.damage.type}`);
+  if (item.armor_class) parts.push(`AC ${item.armor_class.base}${item.armor_class.dex_bonus ? " + Dex" : ""}`);
+  if (item.properties && item.properties.length > 0) parts.push(item.properties.join(", "));
+  return parts.join(" · ");
+}
 
 function HPTracker({ character, onUpdate }) {
   const [amount, setAmount] = useState("");
@@ -111,7 +129,7 @@ function HPTracker({ character, onUpdate }) {
 export default function CharacterSheet({ character, referenceData, onChanged, onDelete, onReferenceDataChanged, isDM = false }) {
   const profBonus = profBonusForLevel(character.level);
   const canEditStats = isDM || !character.finalized;
-  const { races, classes, subclasses, backgrounds, feats, spells } = referenceData;
+  const { races, classes, subclasses, backgrounds, feats, spells, items } = referenceData;
   const subraces = races.find((r) => r.id === character.race_id)?.subraces || [];
   const availableSubclasses = subclasses.filter((sc) => sc.class_id === character.class_id);
   const currentClass = classes.find((c) => c.id === character.class_id);
@@ -131,7 +149,12 @@ export default function CharacterSheet({ character, referenceData, onChanged, on
   }
 
   async function addItem() {
-    const row = await addInventoryItem(character.id, "");
+    const row = await addInventoryItem(character.id, {});
+    onChanged({ ...character, character_inventory: [...character.character_inventory, row] });
+  }
+  async function addCatalogItem(itemId) {
+    if (!itemId) return;
+    const row = await addInventoryItem(character.id, { itemId });
     onChanged({ ...character, character_inventory: [...character.character_inventory, row] });
   }
   async function patchItem(rowId, fields) {
@@ -141,6 +164,28 @@ export default function CharacterSheet({ character, referenceData, onChanged, on
   async function removeItem(rowId) {
     await deleteInventoryRow(rowId);
     onChanged({ ...character, character_inventory: character.character_inventory.filter((r) => r.id !== rowId) });
+  }
+  async function setSlot(rowId, slot) {
+    const occupant = slot ? character.character_inventory.find((r) => r.slot === slot && r.id !== rowId) : null;
+    if (occupant) await updateInventoryRow(occupant.id, { slot: null });
+    await updateInventoryRow(rowId, { slot });
+    onChanged({
+      ...character,
+      character_inventory: character.character_inventory.map((r) => {
+        if (r.id === rowId) return { ...r, slot };
+        if (occupant && r.id === occupant.id) return { ...r, slot: null };
+        return r;
+      }),
+    });
+  }
+  function itemFor(row) {
+    return row.item_id ? items.find((i) => i.id === row.item_id) : null;
+  }
+  const [showItemForm, setShowItemForm] = useState(false);
+  function handleItemCreated(item) {
+    onReferenceDataChanged?.("items", item);
+    addCatalogItem(item.id);
+    setShowItemForm(false);
   }
 
   function updateSlot(idx, fields) {
@@ -395,18 +440,82 @@ export default function CharacterSheet({ character, referenceData, onChanged, on
             <Backpack size={15} color={T.gold} />
             <span className="text-xs uppercase tracking-widest" style={{ ...fontBody, color: T.gold }}>Inventory</span>
           </div>
-          <IconBtn onClick={addItem} title="Add item"><Plus size={14} /></IconBtn>
+          <div className="flex items-center gap-2">
+            {!showItemForm && (
+              <button onClick={() => setShowItemForm(true)} className="text-xs rounded px-2 py-1"
+                style={{ background: T.panel2, border: `1px solid ${T.line}`, color: T.parchmentDim, ...fontBody }}>
+                + Add custom item
+              </button>
+            )}
+            <IconBtn onClick={addItem} title="Quick add (free text)"><Plus size={14} /></IconBtn>
+          </div>
         </div>
-        <div className="flex flex-col gap-1.5">
-          {character.character_inventory.map((row) => (
-            <div key={row.id} className="flex gap-1.5 items-center">
-              <input value={row.notes || ""} onChange={(e) => patchItem(row.id, { notes: e.target.value })} placeholder="Item"
-                className="flex-1 min-w-0 rounded px-2 py-1 text-sm outline-none" style={{ background: T.void, color: T.parchment, border: `1px solid ${T.line}`, ...fontBody }} />
-              <input type="number" value={row.quantity} onChange={(e) => patchItem(row.id, { quantity: Number(e.target.value) || 0 })}
-                className="w-12 rounded px-1 py-1 text-center outline-none" style={{ background: T.void, color: T.parchment, border: `1px solid ${T.line}`, ...fontMono }} />
-              <IconBtn onClick={() => removeItem(row.id)} title="Remove" danger><X size={13} /></IconBtn>
-            </div>
-          ))}
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+          {Object.keys(SLOT_LABELS).map((slotKey) => {
+            const row = character.character_inventory.find((r) => r.slot === slotKey);
+            const item = row ? itemFor(row) : null;
+            return (
+              <div key={slotKey} className="rounded p-2" style={{ background: T.void, border: `1px solid ${T.line}` }}>
+                <div className="text-[10px] uppercase tracking-wider" style={{ color: T.parchmentDim, ...fontBody }}>{SLOT_LABELS[slotKey]}</div>
+                {item ? (
+                  <>
+                    <div className="text-sm truncate" style={{ color: T.parchment, ...fontBody }}>{item.name}</div>
+                    <div className="text-[11px]" style={{ color: T.parchmentDim, ...fontBody }}>{itemStatLine(item)}</div>
+                  </>
+                ) : (
+                  <div className="text-sm" style={{ color: T.parchmentDim, ...fontBody }}>empty</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {showItemForm && <div className="mb-3"><AddItemForm onCreated={handleItemCreated} onCancel={() => setShowItemForm(false)} /></div>}
+        <SelectField label="Add from catalog" value="" onChange={addCatalogItem} options={items} />
+
+        <div className="flex flex-col gap-1.5 mt-3">
+          {character.character_inventory.map((row) => {
+            const item = itemFor(row);
+            const slotOptions = slotOptionsForItem(item);
+            return (
+              <div key={row.id} className="rounded p-2 flex flex-col gap-1.5" style={{ background: T.void, border: `1px solid ${T.line}` }}>
+                <div className="flex gap-1.5 items-center">
+                  {item ? (
+                    <span className="flex-1 min-w-0 text-sm truncate" style={{ color: T.parchment, ...fontBody }}>
+                      {item.name}
+                      {item.source === "homebrew" && <span className="text-[10px] ml-2 px-1.5 py-0.5 rounded" style={{ background: T.panel2, color: T.parchmentDim, ...fontBody }}>homebrew</span>}
+                    </span>
+                  ) : (
+                    <input value={row.notes || ""} onChange={(e) => patchItem(row.id, { notes: e.target.value })} placeholder="Item"
+                      className="flex-1 min-w-0 rounded px-2 py-1 text-sm outline-none" style={{ background: T.panel2, color: T.parchment, border: `1px solid ${T.line}`, ...fontBody }} />
+                  )}
+                  <input type="number" value={row.quantity} onChange={(e) => patchItem(row.id, { quantity: Number(e.target.value) || 0 })}
+                    className="w-12 rounded px-1 py-1 text-center outline-none" style={{ background: T.panel2, color: T.parchment, border: `1px solid ${T.line}`, ...fontMono }} />
+                  <IconBtn onClick={() => removeItem(row.id)} title="Remove" danger><X size={13} /></IconBtn>
+                </div>
+                {item && (
+                  <>
+                    {itemStatLine(item) && <div className="text-[11px]" style={{ color: T.parchmentDim, ...fontBody }}>{itemStatLine(item)}</div>}
+                    {item.description && <div className="text-[11px]" style={{ color: T.parchmentDim, ...fontBody }}>{item.description}</div>}
+                    <div className="flex gap-3 items-center flex-wrap">
+                      {slotOptions.length > 0 && (
+                        <SelectField label="Slot" value={row.slot || ""} onChange={(v) => setSlot(row.id, v)} options={slotOptions} small />
+                      )}
+                      <label className="flex items-center gap-1 text-[11px]" style={{ color: T.parchmentDim, ...fontBody }}>
+                        <input type="checkbox" checked={!!row.equipped} onChange={(e) => patchItem(row.id, { equipped: e.target.checked })} /> Worn/in use
+                      </label>
+                      {item.requires_attunement && (
+                        <label className="flex items-center gap-1 text-[11px]" style={{ color: T.parchmentDim, ...fontBody }}>
+                          <input type="checkbox" checked={!!row.attuned} onChange={(e) => patchItem(row.id, { attuned: e.target.checked })} /> Attuned
+                        </label>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })}
           {character.character_inventory.length === 0 && <p className="text-xs" style={{ color: T.parchmentDim, ...fontBody }}>No items yet.</p>}
         </div>
       </div>

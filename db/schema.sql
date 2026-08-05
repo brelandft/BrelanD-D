@@ -210,9 +210,12 @@ create table characters (
 create index idx_characters_class on characters(class_id);
 
 -- Character inventory (join table: character <-> items, with instance data)
--- item_id is nullable: inventory is intentionally free-text (name + qty),
--- not yet linked to the items catalog — see README "Intentionally
--- simplified for now".
+-- item_id is nullable: a row can either link to the items catalog (name,
+-- damage/AC/description come from there) or be pure free text via `notes`
+-- for quick one-off stuff not worth cataloging.
+-- slot is display-only — which equipped-gear slot (if any) this row
+-- occupies, so it's easy to see what's actively worn/wielded vs just
+-- carried. Doesn't drive any AC/attack calculation; that stays on paper.
 create table character_inventory (
   id           uuid primary key default gen_random_uuid(),
   character_id uuid not null references characters(id) on delete cascade,
@@ -220,6 +223,7 @@ create table character_inventory (
   quantity     int default 1,
   equipped     boolean default false,
   attuned      boolean default false,
+  slot         text check (slot in ('armor', 'shield', 'main_hand', 'off_hand')),
   notes        text
 );
 create index idx_inventory_character on character_inventory(character_id);

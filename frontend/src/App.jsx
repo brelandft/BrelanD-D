@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ArrowLeft, Users, Map as MapIcon, ScrollText, Skull, Backpack, Sparkles, BookOpen } from "lucide-react";
 import { useFonts, GLOBAL_CSS, T, fontDisplay, fontBody } from "./lib/gameData";
 import {
-  loadReferenceData, loadCampaigns, createCampaign, updateCampaign,
+  loadReferenceData, loadCampaigns, createCampaign, updateCampaign, deleteCampaign,
   loadCharacters, createCharacter, deleteCharacter,
   loadMaps, createMap, deleteMap, renameMap, addToken, loadDmPin, syncTokenHp,
 } from "./lib/api";
@@ -135,6 +135,11 @@ export default function App() {
   function handleCampaignChanged(updated) {
     setCampaigns((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
   }
+  async function handleDeleteCampaign(id) {
+    await deleteCampaign(id);
+    setCampaigns((prev) => prev.filter((c) => c.id !== id));
+    if (campaignId === id) switchCampaign();
+  }
   async function handleDeleteCharacter(id) {
     await deleteCharacter(id);
     setCharacters((prev) => prev.filter((c) => c.id !== id));
@@ -255,7 +260,7 @@ export default function App() {
 
           {view === "dm" && currentCampaign && (
             <div className="px-4 py-2" style={{ borderBottom: `1px solid ${T.line}`, background: T.panel }}>
-              <CampaignSettings campaign={currentCampaign} onChanged={handleCampaignChanged} />
+              <CampaignSettings campaign={currentCampaign} onChanged={handleCampaignChanged} onDelete={handleDeleteCampaign} />
             </div>
           )}
 

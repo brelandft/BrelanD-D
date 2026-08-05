@@ -20,18 +20,28 @@ export async function updateCampaign(id, patch) {
   return data;
 }
 
+// Cascades to that campaign's characters, maps, tokens, and monster
+// instances via the existing foreign-key constraints (on delete cascade) —
+// reference content (races/classes/feats/spells/items/etc.) is untouched
+// since it's shared across all campaigns, not owned by any one of them.
+export async function deleteCampaign(id) {
+  const { error } = await supabase.from("campaigns").delete().eq("id", id);
+  if (error) throw error;
+}
+
 // ---------- reference data (SRD + homebrew, read-mostly) ----------
 
 export async function loadReferenceData() {
-  const [races, classes, subclasses, backgrounds, feats, spells] = await Promise.all([
+  const [races, classes, subclasses, backgrounds, feats, spells, items] = await Promise.all([
     supabase.from("races").select("*").order("name"),
     supabase.from("classes").select("*").order("name"),
     supabase.from("subclasses").select("*").order("name"),
     supabase.from("backgrounds").select("*").order("name"),
     supabase.from("feats").select("*").order("name"),
     supabase.from("spells").select("*").order("name"),
+    supabase.from("items").select("*").order("name"),
   ]);
-  for (const r of [races, classes, subclasses, backgrounds, feats, spells]) {
+  for (const r of [races, classes, subclasses, backgrounds, feats, spells, items]) {
     if (r.error) throw r.error;
   }
   return {
@@ -41,6 +51,7 @@ export async function loadReferenceData() {
     backgrounds: backgrounds.data,
     feats: feats.data,
     spells: spells.data,
+    items: items.data,
   };
 }
 
@@ -145,10 +156,10 @@ export async function deleteCharacter(id) {
   if (error) throw error;
 }
 
-export async function addInventoryItem(characterId, name) {
+export async function addInventoryItem(characterId, { itemId = null, notes = "" } = {}) {
   const { data, error } = await supabase
     .from("character_inventory")
-    .insert({ character_id: characterId, item_id: null, quantity: 1, notes: name })
+    .insert({ character_id: characterId, item_id: itemId, quantity: 1, notes })
     .select()
     .single();
   if (error) throw error;
