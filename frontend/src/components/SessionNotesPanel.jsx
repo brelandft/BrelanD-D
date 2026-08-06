@@ -42,7 +42,7 @@ function AddNoteForm({ onCreate, onCancel }) {
   }
 
   return (
-    <div className="rounded-lg p-4 flex flex-col gap-3 max-w-2xl" style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
+    <div className="rounded-lg p-4 flex flex-col gap-3" style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
       <div className="flex flex-wrap gap-2">
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title"
           className="flex-1 min-w-[160px] rounded px-2 py-1.5 text-sm outline-none" style={{ background: T.void, color: T.parchment, border: `1px solid ${T.line}`, ...fontBody }} />
@@ -104,7 +104,7 @@ export default function SessionNotesPanel({ notes, onCreate, onChanged, onDelete
   const visible = filter === "all" ? notes : notes.filter((n) => n.category === filter);
 
   return (
-    <div className="p-4 flex flex-col gap-3 max-w-7xl">
+    <div className="p-4 flex flex-col gap-3 max-w-2xl">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <StickyNote size={16} color={T.gold} />
@@ -133,7 +133,7 @@ export default function SessionNotesPanel({ notes, onCreate, onChanged, onDelete
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-2 items-start">
+      <div className="flex flex-col gap-2">
         {visible.map((note) => (
           <NoteCard key={note.id} note={note} onChanged={onChanged} onDelete={onDelete} />
         ))}

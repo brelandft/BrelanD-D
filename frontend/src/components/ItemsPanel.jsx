@@ -1,8 +1,45 @@
 import React, { useEffect, useState } from "react";
-import { Backpack, Plus } from "lucide-react";
+import { Backpack, Plus, ChevronDown, ChevronRight } from "lucide-react";
 import { T, fontDisplay, fontBody } from "../lib/gameData";
 import { supabase } from "../lib/supabaseClient";
 import AddItemForm from "./AddItemForm";
+
+function itemStatLine(item) {
+  const parts = [];
+  if (item.damage) parts.push(`${item.damage.dice} ${item.damage.type}`);
+  if (item.armor_class) parts.push(`AC ${item.armor_class.base}${item.armor_class.dex_bonus ? " + Dex" : ""}`);
+  if (item.properties && item.properties.length > 0) parts.push(item.properties.join(", "));
+  return parts.join(" · ");
+}
+
+function ItemCard({ item }) {
+  const [expanded, setExpanded] = useState(false);
+  const hasDetails = !!(itemStatLine(item) || item.description);
+
+  return (
+    <div className="rounded-lg px-3 py-2 flex flex-col gap-1" style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
+      <div className={`flex items-center justify-between gap-2 ${hasDetails ? "cursor-pointer" : ""}`} onClick={() => hasDetails && setExpanded((e) => !e)}>
+        <div className="flex items-center gap-1.5 min-w-0">
+          {hasDetails && (expanded ? <ChevronDown size={13} color={T.parchmentDim} /> : <ChevronRight size={13} color={T.parchmentDim} />)}
+          <span className="truncate" style={{ ...fontDisplay, color: T.parchment, fontSize: "15px", fontWeight: 600 }}>{item.name}</span>
+          <span className="text-[11px] flex-shrink-0" style={{ ...fontBody, color: T.parchmentDim }}>{item.item_type}{item.subtype ? ` · ${item.subtype}` : ""}</span>
+          {item.source === "homebrew" && <span className="text-[10px] px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: T.mossDim, color: T.parchment, ...fontBody }}>homebrew</span>}
+          {item.requires_attunement && <span className="text-[10px] px-1.5 py-0.5 rounded flex-shrink-0" style={{ background: T.bloodDim, color: T.parchment, ...fontBody }}>attunement</span>}
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {item.weight_lb != null && <span className="text-[11px]" style={{ ...fontBody, color: T.parchmentDim }}>{item.weight_lb} lb</span>}
+          {item.cost_gp != null && <span className="text-xs" style={{ ...fontBody, color: T.gold }}>{item.cost_gp} gp</span>}
+        </div>
+      </div>
+      {expanded && (
+        <>
+          {itemStatLine(item) && <div className="text-[11px]" style={{ ...fontBody, color: T.parchmentDim }}>{itemStatLine(item)}</div>}
+          {item.description && <div className="text-[11px]" style={{ ...fontBody, color: T.parchmentDim }}>{item.description}</div>}
+        </>
+      )}
+    </div>
+  );
+}
 
 export default function ItemsPanel() {
   const [query, setQuery] = useState("");
@@ -46,28 +83,7 @@ export default function ItemsPanel() {
       {loading && <p className="text-xs" style={{ color: T.parchmentDim, ...fontBody }}>Loading…</p>}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-2 items-start">
         {items.map((item) => (
-          <div key={item.id} className="rounded-lg px-3 py-2 flex flex-col gap-1" style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
-            <div className="flex items-center justify-between">
-              <div>
-                <span style={{ ...fontDisplay, color: T.parchment, fontSize: "15px", fontWeight: 600 }}>{item.name}</span>
-                <span className="text-[11px] ml-2" style={{ ...fontBody, color: T.parchmentDim }}>{item.item_type}{item.subtype ? ` · ${item.subtype}` : ""}</span>
-                {item.source === "homebrew" && <span className="text-[10px] ml-2 px-1.5 py-0.5 rounded" style={{ background: T.mossDim, color: T.parchment, ...fontBody }}>homebrew</span>}
-                {item.requires_attunement && <span className="text-[10px] ml-2 px-1.5 py-0.5 rounded" style={{ background: T.bloodDim, color: T.parchment, ...fontBody }}>attunement</span>}
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {item.weight_lb != null && <span className="text-[11px]" style={{ ...fontBody, color: T.parchmentDim }}>{item.weight_lb} lb</span>}
-                {item.cost_gp != null && <span className="text-xs" style={{ ...fontBody, color: T.gold }}>{item.cost_gp} gp</span>}
-              </div>
-            </div>
-            {(item.damage || item.armor_class || (item.properties && item.properties.length > 0)) && (
-              <div className="text-[11px]" style={{ ...fontBody, color: T.parchmentDim }}>
-                {item.damage && <span>{item.damage.dice} {item.damage.type}</span>}
-                {item.armor_class && <span>{item.damage ? " · " : ""}AC {item.armor_class.base}{item.armor_class.dex_bonus ? " + Dex" : ""}</span>}
-                {item.properties && item.properties.length > 0 && <span>{(item.damage || item.armor_class) ? " · " : ""}{item.properties.join(", ")}</span>}
-              </div>
-            )}
-            {item.description && <div className="text-[11px]" style={{ ...fontBody, color: T.parchmentDim }}>{item.description}</div>}
-          </div>
+          <ItemCard key={item.id} item={item} />
         ))}
         {!loading && items.length === 0 && <p className="text-xs" style={{ color: T.parchmentDim, ...fontBody }}>No items found.</p>}
       </div>
