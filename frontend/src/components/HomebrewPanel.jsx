@@ -24,7 +24,7 @@ export default function HomebrewPanel({ referenceData, onReferenceDataChanged })
   }
 
   return (
-    <div className="p-4 flex flex-col gap-4 max-w-2xl">
+    <div className="p-4 flex flex-col gap-4 max-w-4xl">
       <div className="flex gap-1.5 flex-wrap">
         {SECTIONS.map(({ id, label, icon: Icon }) => (
           <button key={id} onClick={() => setSection(id)} className="flex items-center gap-1.5 rounded px-3 py-1.5 text-sm"

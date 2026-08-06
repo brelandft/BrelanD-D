@@ -27,7 +27,7 @@ export default function ItemsPanel() {
   }
 
   return (
-    <div className="p-4 flex flex-col gap-3 max-w-2xl">
+    <div className="p-4 flex flex-col gap-3 max-w-4xl">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Backpack size={16} color={T.gold} />

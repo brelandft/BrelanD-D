@@ -34,7 +34,7 @@ export default function MonsterPanel({ map, onTokensChanged }) {
   }
 
   return (
-    <div className="p-4 flex flex-col gap-4 max-w-2xl">
+    <div className="p-4 flex flex-col gap-4 max-w-4xl">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Skull size={16} color={T.gold} />
