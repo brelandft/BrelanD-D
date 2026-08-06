@@ -221,6 +221,39 @@ export async function uploadMapImage(file) {
   return data.publicUrl;
 }
 
+// ---------- session notes / encounters ----------
+
+export async function loadCampaignNotes(campaignId) {
+  const { data, error } = await supabase
+    .from("campaign_notes")
+    .select("*")
+    .eq("campaign_id", campaignId)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export async function createCampaignNote(campaignId, fields) {
+  const { data, error } = await supabase
+    .from("campaign_notes")
+    .insert({ campaign_id: campaignId, ...fields })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateCampaignNote(id, patch) {
+  const { data, error } = await supabase.from("campaign_notes").update(patch).eq("id", id).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteCampaignNote(id) {
+  const { error } = await supabase.from("campaign_notes").delete().eq("id", id);
+  if (error) throw error;
+}
+
 export async function addToken(mapId, { entityType, entityId, label, color, x = 50, y = 50, hpCurrent = null, hpMax = null, spriteKey = null, spriteColor = null }) {
   const { data, error } = await supabase
     .from("tokens")

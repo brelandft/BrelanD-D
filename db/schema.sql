@@ -275,6 +275,23 @@ create table maps (
   updated_at   timestamptz default now()
 );
 
+-- ---------------------------------------------------------------------
+-- Session notes / encounters — DM prep content, campaign-scoped.
+-- status is a lightweight planned/active/done marker so the DM can mark
+-- what's currently being run without deleting finished threads.
+-- ---------------------------------------------------------------------
+create table campaign_notes (
+  id          uuid primary key default gen_random_uuid(),
+  campaign_id uuid not null references campaigns(id) on delete cascade,
+  title       text not null,
+  category    text not null check (category in ('encounter', 'npc', 'location', 'plot', 'loot', 'reminder')),
+  status      text not null default 'planned' check (status in ('planned', 'active', 'done')),
+  body        text,
+  created_at  timestamptz default now(),
+  updated_at  timestamptz default now()
+);
+create index idx_campaign_notes_campaign on campaign_notes(campaign_id);
+
 -- A specific monster placed into play (its own HP, separate from the template)
 create table monster_instances (
   id            uuid primary key default gen_random_uuid(),
@@ -326,6 +343,7 @@ alter table monster_instances enable row level security;
 alter table maps enable row level security;
 alter table tokens enable row level security;
 alter table campaigns enable row level security;
+alter table campaign_notes enable row level security;
 
 create policy "anon full access" on characters for all using (true) with check (true);
 create policy "anon full access" on character_inventory for all using (true) with check (true);
@@ -334,6 +352,7 @@ create policy "anon full access" on monster_instances for all using (true) with 
 create policy "anon full access" on maps for all using (true) with check (true);
 create policy "anon full access" on tokens for all using (true) with check (true);
 create policy "anon full access" on campaigns for all using (true) with check (true);
+create policy "anon full access" on campaign_notes for all using (true) with check (true);
 
 create index idx_characters_campaign on characters(campaign_id);
 create index idx_maps_campaign on maps(campaign_id);

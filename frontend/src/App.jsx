@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, Users, Map as MapIcon, ScrollText, Skull, Backpack, Sparkles, BookOpen } from "lucide-react";
+import { ArrowLeft, Users, Map as MapIcon, ScrollText, Skull, Backpack, Sparkles, BookOpen, StickyNote } from "lucide-react";
 import { useFonts, GLOBAL_CSS, T, fontDisplay, fontBody } from "./lib/gameData";
 import {
   loadReferenceData, loadCampaigns, createCampaign, updateCampaign, deleteCampaign,
   loadCharacters, createCharacter, deleteCharacter,
   loadMaps, createMap, deleteMap, renameMap, addToken, loadDmPin, syncTokenHp,
+  loadCampaignNotes, createCampaignNote, updateCampaignNote, deleteCampaignNote,
 } from "./lib/api";
 import "./styles.css";
 
@@ -22,6 +23,7 @@ import HomebrewPanel from "./components/HomebrewPanel";
 import DmRosterPanel from "./components/DmRosterPanel";
 import PartyReference from "./components/PartyReference";
 import DmReference from "./components/DmReference";
+import SessionNotesPanel from "./components/SessionNotesPanel";
 
 function enrichCharacter(c, refData) {
   return {
@@ -47,6 +49,7 @@ export default function App() {
   const [selectedId, setSelectedId] = useState(null);
   const [maps, setMaps] = useState([]);
   const [activeMapId, setActiveMapId] = useState(null);
+  const [notes, setNotes] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [campaignLoading, setCampaignLoading] = useState(false);
@@ -74,7 +77,7 @@ export default function App() {
     setCampaignLoading(true);
     setSelectedId(null);
     try {
-      const [chars, mapList] = await Promise.all([loadCharacters(id), loadMaps(id)]);
+      const [chars, mapList, noteList] = await Promise.all([loadCharacters(id), loadMaps(id), loadCampaignNotes(id)]);
       setCharacters(chars.map((c) => enrichCharacter(c, refData)));
       let finalMaps = mapList;
       if (finalMaps.length === 0) {
@@ -83,6 +86,7 @@ export default function App() {
       }
       setMaps(finalMaps);
       setActiveMapId(finalMaps[0].id);
+      setNotes(noteList);
     } finally {
       setCampaignLoading(false);
       setView(pendingRole);
@@ -104,6 +108,7 @@ export default function App() {
     setCharacters([]);
     setMaps([]);
     setActiveMapId(null);
+    setNotes([]);
     setView("campaign-select");
   }
   function backToHall() {
@@ -112,6 +117,7 @@ export default function App() {
     setCharacters([]);
     setMaps([]);
     setActiveMapId(null);
+    setNotes([]);
     setView("landing");
   }
 
@@ -162,6 +168,20 @@ export default function App() {
     setRefData((prev) => ({ ...prev, [kind]: [...prev[kind], item].sort((a, b) => a.name.localeCompare(b.name)) }));
   }
 
+  // ---------- session notes ----------
+  async function handleCreateNote(fields) {
+    const created = await createCampaignNote(campaignId, fields);
+    setNotes((prev) => [...prev, created]);
+  }
+  async function handleNoteChanged(id, fields) {
+    const updated = await updateCampaignNote(id, fields);
+    setNotes((prev) => prev.map((n) => (n.id === id ? updated : n)));
+  }
+  async function handleDeleteNote(id) {
+    await deleteCampaignNote(id);
+    setNotes((prev) => prev.filter((n) => n.id !== id));
+  }
+
   // ---------- map helpers ----------
   const activeMap = maps.find((m) => m.id === activeMapId) || null;
   function updateMapTokens(mapId, tokens) {
@@ -210,6 +230,7 @@ export default function App() {
     { id: "map", label: "Map", icon: MapIcon },
     { id: "items", label: "Items", icon: Backpack },
     { id: "homebrew", label: "Homebrew", icon: Sparkles },
+    { id: "notes", label: "Session Notes", icon: StickyNote },
     { id: "reference", label: "Reference", icon: BookOpen },
   ];
   const currentCampaign = campaigns.find((c) => c.id === campaignId);
@@ -321,6 +342,7 @@ export default function App() {
               )}
               {dmTab === "items" && <ItemsPanel />}
               {dmTab === "homebrew" && <HomebrewPanel referenceData={refData} onReferenceDataChanged={handleReferenceDataChanged} />}
+              {dmTab === "notes" && <SessionNotesPanel notes={notes} onCreate={handleCreateNote} onChanged={handleNoteChanged} onDelete={handleDeleteNote} />}
               {dmTab === "reference" && <DmReference />}
             </div>
           )}
