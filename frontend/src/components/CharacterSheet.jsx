@@ -3,6 +3,7 @@ import { Trash2, Heart, ScrollText, Backpack, Sparkles, X, Plus, Star, BookOpen,
 import { T, fontDisplay, fontBody, fontMono, ABILITIES, SKILLS, mod, fmtMod, profBonusForLevel } from "../lib/gameData";
 import { IconBtn, NumberField, TextField, SelectField, StaticField } from "./atoms";
 import { COLOR_OPTIONS, TokenSprite, classImageFor, COLOR_HEX } from "../lib/sprites";
+import { useDebouncedField } from "../lib/hooks";
 import {
   updateCharacter, addInventoryItem, updateInventoryRow, deleteInventoryRow,
 } from "../lib/api";
@@ -31,6 +32,13 @@ function HPTracker({ character, onUpdate }) {
   const [amount, setAmount] = useState("");
   const hp = character.hp;
 
+  const [maxHp, setMaxHp, flushMaxHp] = useDebouncedField(hp.max, (v) => onUpdate({ hp: { ...hp, max: Number(v) || 0 } }));
+  const [tempHp, setTempHp, flushTempHp] = useDebouncedField(hp.temp, (v) => onUpdate({ hp: { ...hp, temp: Math.max(0, Number(v) || 0) } }));
+  const [hdCurrent, setHdCurrent, flushHdCurrent] = useDebouncedField(character.hit_dice.current, (v) => onUpdate({ hit_dice: { ...character.hit_dice, current: Number(v) || 0 } }));
+  const [hdTotal, setHdTotal, flushHdTotal] = useDebouncedField(character.hit_dice.total, (v) => onUpdate({ hit_dice: { ...character.hit_dice, total: Number(v) || 0 } }));
+  const [hdDie, setHdDie, flushHdDie] = useDebouncedField(character.hit_dice.die, (v) => onUpdate({ hit_dice: { ...character.hit_dice, die: v } }));
+  const [exhaustion, setExhaustion, flushExhaustion] = useDebouncedField(character.exhaustion, (v) => onUpdate({ exhaustion: Math.max(0, Math.min(6, Number(v) || 0)) }));
+
   function applyDamage() {
     const dmg = Number(amount) || 0;
     if (dmg <= 0) return;
@@ -48,7 +56,6 @@ function HPTracker({ character, onUpdate }) {
     onUpdate({ hp: { ...hp, current }, death_saves: deathSaves });
     setAmount("");
   }
-  function setTemp(v) { onUpdate({ hp: { ...hp, temp: Math.max(0, Number(v) || 0) } }); }
   function setDeathSave(kind, n) { onUpdate({ death_saves: { ...character.death_saves, [kind]: n } }); }
 
   const pct = hp.max > 0 ? Math.max(0, Math.min(100, (hp.current / hp.max) * 100)) : 0;
@@ -73,8 +80,8 @@ function HPTracker({ character, onUpdate }) {
         </div>
       </div>
       <div className="flex flex-wrap items-end gap-2 mb-3">
-        <NumberField label="Max HP" value={hp.max} onChange={(v) => onUpdate({ hp: { ...hp, max: Number(v) || 0 } })} />
-        <NumberField label="Temp HP" value={hp.temp} onChange={setTemp} />
+        <NumberField label="Max HP" value={maxHp} onChange={setMaxHp} onBlur={flushMaxHp} />
+        <NumberField label="Temp HP" value={tempHp} onChange={setTempHp} onBlur={flushTempHp} />
         <div className="flex flex-col gap-1">
           <span className="text-[10px] uppercase tracking-wider" style={{ ...fontBody, color: T.parchmentDim }}>Apply</span>
           <div className="flex gap-1">
@@ -89,16 +96,16 @@ function HPTracker({ character, onUpdate }) {
         <div>
           <span className="text-[10px] uppercase tracking-wider block mb-1" style={{ ...fontBody, color: T.parchmentDim }}>Hit Dice</span>
           <div className="flex gap-1 items-center">
-            <NumberField value={character.hit_dice.current} onChange={(v) => onUpdate({ hit_dice: { ...character.hit_dice, current: Number(v) || 0 } })} small />
+            <NumberField value={hdCurrent} onChange={setHdCurrent} onBlur={flushHdCurrent} small />
             <span style={{ color: T.parchmentDim, ...fontMono }}>/</span>
-            <NumberField value={character.hit_dice.total} onChange={(v) => onUpdate({ hit_dice: { ...character.hit_dice, total: Number(v) || 0 } })} small />
-            <input value={character.hit_dice.die} onChange={(e) => onUpdate({ hit_dice: { ...character.hit_dice, die: e.target.value } })}
+            <NumberField value={hdTotal} onChange={setHdTotal} onBlur={flushHdTotal} small />
+            <input value={hdDie} onChange={(e) => setHdDie(e.target.value)} onBlur={flushHdDie}
               className="w-12 rounded px-1 py-1 text-center outline-none" style={{ background: T.void, color: T.parchment, border: `1px solid ${T.line}`, ...fontMono }} />
           </div>
         </div>
         <div>
           <span className="text-[10px] uppercase tracking-wider block mb-1" style={{ ...fontBody, color: T.parchmentDim }}>Exhaustion</span>
-          <NumberField value={character.exhaustion} onChange={(v) => onUpdate({ exhaustion: Math.max(0, Math.min(6, Number(v) || 0)) })} small />
+          <NumberField value={exhaustion} onChange={setExhaustion} onBlur={flushExhaustion} small />
         </div>
         {hp.current === 0 && (
           <div>
@@ -126,6 +133,93 @@ function HPTracker({ character, onUpdate }) {
   );
 }
 
+function AbilityScoreBox({ ab, value, onCommit, editable }) {
+  const [local, setLocal, flush] = useDebouncedField(value, onCommit);
+  return (
+    <div className="rounded p-2 text-center" style={{ background: T.void, border: `1px solid ${T.line}` }}>
+      <div className="text-[10px] uppercase" style={{ ...fontBody, color: T.parchmentDim }}>{ab}</div>
+      {editable ? (
+        <input type="number" value={local} onChange={(e) => setLocal(e.target.value)} onBlur={flush}
+          className="w-full bg-transparent text-center outline-none" style={{ ...fontMono, color: T.parchment, fontSize: "20px" }} />
+      ) : (
+        <div style={{ ...fontMono, color: T.parchmentDim, fontSize: "20px" }}>{value}</div>
+      )}
+      <div style={{ ...fontMono, color: T.gold, fontSize: "13px" }}>{fmtMod(mod(value))}</div>
+    </div>
+  );
+}
+
+function InventoryRow({ row, item, onPatch, onSetSlot, onRemove }) {
+  const [notes, setNotes, flushNotes] = useDebouncedField(row.notes || "", (v) => onPatch(row.id, { notes: v }));
+  const [qty, setQty, flushQty] = useDebouncedField(row.quantity, (v) => onPatch(row.id, { quantity: Number(v) || 0 }));
+  const slotOptions = slotOptionsForItem(item);
+
+  return (
+    <div className="rounded p-2 flex flex-col gap-1.5" style={{ background: T.void, border: `1px solid ${T.line}` }}>
+      <div className="flex gap-1.5 items-center">
+        {item ? (
+          <span className="flex-1 min-w-0 text-sm truncate" style={{ color: T.parchment, ...fontBody }}>
+            {item.name}
+            {item.source === "homebrew" && <span className="text-[10px] ml-2 px-1.5 py-0.5 rounded" style={{ background: T.panel2, color: T.parchmentDim, ...fontBody }}>homebrew</span>}
+          </span>
+        ) : (
+          <input value={notes} onChange={(e) => setNotes(e.target.value)} onBlur={flushNotes} placeholder="Item"
+            className="flex-1 min-w-0 rounded px-2 py-1 text-sm outline-none" style={{ background: T.panel2, color: T.parchment, border: `1px solid ${T.line}`, ...fontBody }} />
+        )}
+        <input type="number" value={qty} onChange={(e) => setQty(Number(e.target.value) || 0)} onBlur={flushQty}
+          className="w-12 rounded px-1 py-1 text-center outline-none" style={{ background: T.panel2, color: T.parchment, border: `1px solid ${T.line}`, ...fontMono }} />
+        <IconBtn onClick={() => onRemove(row.id)} title="Remove" danger><X size={13} /></IconBtn>
+      </div>
+      {item && (
+        <>
+          {itemStatLine(item) && <div className="text-[11px]" style={{ color: T.parchmentDim, ...fontBody }}>{itemStatLine(item)}</div>}
+          {item.description && <div className="text-[11px]" style={{ color: T.parchmentDim, ...fontBody }}>{item.description}</div>}
+          <div className="flex gap-3 items-center flex-wrap">
+            {slotOptions.length > 0 && (
+              <SelectField label="Slot" value={row.slot || ""} onChange={(v) => onSetSlot(row.id, v)} options={slotOptions} small />
+            )}
+            <label className="flex items-center gap-1 text-[11px]" style={{ color: T.parchmentDim, ...fontBody }}>
+              <input type="checkbox" checked={!!row.equipped} onChange={(e) => onPatch(row.id, { equipped: e.target.checked })} /> Worn/in use
+            </label>
+            {item.requires_attunement && (
+              <label className="flex items-center gap-1 text-[11px]" style={{ color: T.parchmentDim, ...fontBody }}>
+                <input type="checkbox" checked={!!row.attuned} onChange={(e) => onPatch(row.id, { attuned: e.target.checked })} /> Attuned
+              </label>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function AbilityRow({ ability, idx, onUpdate, onRemove }) {
+  const [name, setName, flushName] = useDebouncedField(ability.name, (v) => onUpdate(idx, { name: v }));
+  const [description, setDescription, flushDescription] = useDebouncedField(ability.description, (v) => onUpdate(idx, { description: v }));
+  const [usesCurrent, setUsesCurrent, flushUsesCurrent] = useDebouncedField(ability.uses_current, (v) => onUpdate(idx, { uses_current: Number(v) || 0 }));
+  const [usesMax, setUsesMax, flushUsesMax] = useDebouncedField(ability.uses_max, (v) => onUpdate(idx, { uses_max: Number(v) || 0 }));
+  const [recharge, setRecharge, flushRecharge] = useDebouncedField(ability.recharge, (v) => onUpdate(idx, { recharge: v }));
+
+  return (
+    <div className="rounded p-2 flex flex-col gap-1.5" style={{ background: T.void, border: `1px solid ${T.line}` }}>
+      <div className="flex gap-1.5">
+        <input value={name} onChange={(e) => setName(e.target.value)} onBlur={flushName} placeholder="Ability name"
+          className="flex-1 rounded px-2 py-1 text-sm outline-none" style={{ background: T.panel2, color: T.parchment, border: `1px solid ${T.line}`, ...fontBody }} />
+        <IconBtn onClick={() => onRemove(idx)} title="Remove" danger><X size={13} /></IconBtn>
+      </div>
+      <textarea value={description} onChange={(e) => setDescription(e.target.value)} onBlur={flushDescription} placeholder="Description" rows={2}
+        className="rounded px-2 py-1 text-sm outline-none resize-none" style={{ background: T.panel2, color: T.parchment, border: `1px solid ${T.line}`, ...fontBody }} />
+      <div className="flex gap-2 items-center flex-wrap">
+        <span className="text-[10px] uppercase tracking-wider" style={{ color: T.parchmentDim, ...fontBody }}>Uses</span>
+        <NumberField value={usesCurrent} onChange={setUsesCurrent} onBlur={flushUsesCurrent} small />
+        <span style={{ color: T.parchmentDim, ...fontMono }}>/</span>
+        <NumberField value={usesMax} onChange={setUsesMax} onBlur={flushUsesMax} small />
+        <TextField label="Recharge" value={recharge} onChange={setRecharge} onBlur={flushRecharge} placeholder="e.g. Short Rest" />
+      </div>
+    </div>
+  );
+}
+
 export default function CharacterSheet({ character, referenceData, onChanged, onDelete, onReferenceDataChanged, isDM = false }) {
   const profBonus = profBonusForLevel(character.level);
   const canEditStats = isDM || !character.finalized;
@@ -140,6 +234,12 @@ export default function CharacterSheet({ character, referenceData, onChanged, on
     const updated = await updateCharacter(character.id, fields);
     onChanged(updated);
   }
+  const [nameLocal, setNameLocal, flushName] = useDebouncedField(character.name, (v) => patch({ name: v }));
+  const [acLocal, setAcLocal, flushAc] = useDebouncedField(character.ac, (v) => patch({ ac: Number(v) || 0 }));
+  const [speedLocal, setSpeedLocal, flushSpeed] = useDebouncedField(character.speed, (v) => patch({ speed: Number(v) || 0 }));
+  const [levelLocal, setLevelLocal, flushLevel] = useDebouncedField(character.level, (v) => patch({ level: Number(v) || 1 }));
+  const [notesLocal, setNotesLocal, flushNotesField] = useDebouncedField(character.features_notes || "", (v) => patch({ features_notes: v }));
+
   function setAbility(ab, value) {
     patch({ abilities: { ...character.abilities, [ab]: value === "" ? "" : Number(value) } });
   }
@@ -266,7 +366,7 @@ export default function CharacterSheet({ character, referenceData, onChanged, on
     <div className="flex flex-col gap-4 p-4 max-w-3xl">
       <div className="rounded-lg p-4" style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
         <div className="flex justify-between items-start mb-3">
-          <input value={character.name} onChange={(e) => patch({ name: e.target.value })} className="bg-transparent outline-none w-full"
+          <input value={nameLocal} onChange={(e) => setNameLocal(e.target.value)} onBlur={flushName} className="bg-transparent outline-none w-full"
             style={{ ...fontDisplay, color: T.parchment, fontSize: "32px", fontWeight: 700 }} />
           {isDM && <IconBtn onClick={() => onDelete(character.id)} title="Delete character" danger><Trash2 size={15} /></IconBtn>}
         </div>
@@ -293,7 +393,7 @@ export default function CharacterSheet({ character, referenceData, onChanged, on
               {availableSubclasses.length > 0 && (
                 <SelectField label="Subclass" value={character.subclass_id} onChange={(v) => patch({ subclass_id: v })} options={availableSubclasses} small />
               )}
-              <NumberField label="Level" value={character.level} onChange={(v) => patch({ level: Number(v) || 1 })} small />
+              <NumberField label="Level" value={levelLocal} onChange={setLevelLocal} onBlur={flushLevel} small />
               <SelectField label="Background" value={character.background_id} onChange={(v) => patch({ background_id: v })} options={backgrounds} small />
             </>
           ) : (
@@ -310,8 +410,8 @@ export default function CharacterSheet({ character, referenceData, onChanged, on
         <div className="flex flex-wrap gap-2 mt-2">
           {canEditStats ? (
             <>
-              <NumberField label="Armor Class" value={character.ac} onChange={(v) => patch({ ac: Number(v) || 0 })} small />
-              <NumberField label="Speed" value={character.speed} onChange={(v) => patch({ speed: Number(v) || 0 })} small />
+              <NumberField label="Armor Class" value={acLocal} onChange={setAcLocal} onBlur={flushAc} small />
+              <NumberField label="Speed" value={speedLocal} onChange={setSpeedLocal} onBlur={flushSpeed} small />
             </>
           ) : (
             <>
@@ -355,16 +455,8 @@ export default function CharacterSheet({ character, referenceData, onChanged, on
         <div className="text-xs uppercase tracking-widest mb-3" style={{ ...fontBody, color: T.gold }}>Ability Scores</div>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
           {ABILITIES.map((ab) => (
-            <div key={ab} className="rounded p-2 text-center" style={{ background: T.void, border: `1px solid ${T.line}` }}>
-              <div className="text-[10px] uppercase" style={{ ...fontBody, color: T.parchmentDim }}>{ab}</div>
-              {canEditStats ? (
-                <input type="number" value={character.abilities[ab]} onChange={(e) => setAbility(ab, e.target.value)}
-                  className="w-full bg-transparent text-center outline-none" style={{ ...fontMono, color: T.parchment, fontSize: "20px" }} />
-              ) : (
-                <div style={{ ...fontMono, color: T.parchmentDim, fontSize: "20px" }}>{character.abilities[ab]}</div>
-              )}
-              <div style={{ ...fontMono, color: T.gold, fontSize: "13px" }}>{fmtMod(mod(character.abilities[ab]))}</div>
-            </div>
+            <AbilityScoreBox key={ab} ab={ab} value={character.abilities[ab]} editable={canEditStats}
+              onCommit={(v) => setAbility(ab, v)} />
           ))}
         </div>
       </div>
@@ -475,47 +567,9 @@ export default function CharacterSheet({ character, referenceData, onChanged, on
         <SelectField label="Add from catalog" value="" onChange={addCatalogItem} options={items} />
 
         <div className="flex flex-col gap-1.5 mt-3">
-          {character.character_inventory.map((row) => {
-            const item = itemFor(row);
-            const slotOptions = slotOptionsForItem(item);
-            return (
-              <div key={row.id} className="rounded p-2 flex flex-col gap-1.5" style={{ background: T.void, border: `1px solid ${T.line}` }}>
-                <div className="flex gap-1.5 items-center">
-                  {item ? (
-                    <span className="flex-1 min-w-0 text-sm truncate" style={{ color: T.parchment, ...fontBody }}>
-                      {item.name}
-                      {item.source === "homebrew" && <span className="text-[10px] ml-2 px-1.5 py-0.5 rounded" style={{ background: T.panel2, color: T.parchmentDim, ...fontBody }}>homebrew</span>}
-                    </span>
-                  ) : (
-                    <input value={row.notes || ""} onChange={(e) => patchItem(row.id, { notes: e.target.value })} placeholder="Item"
-                      className="flex-1 min-w-0 rounded px-2 py-1 text-sm outline-none" style={{ background: T.panel2, color: T.parchment, border: `1px solid ${T.line}`, ...fontBody }} />
-                  )}
-                  <input type="number" value={row.quantity} onChange={(e) => patchItem(row.id, { quantity: Number(e.target.value) || 0 })}
-                    className="w-12 rounded px-1 py-1 text-center outline-none" style={{ background: T.panel2, color: T.parchment, border: `1px solid ${T.line}`, ...fontMono }} />
-                  <IconBtn onClick={() => removeItem(row.id)} title="Remove" danger><X size={13} /></IconBtn>
-                </div>
-                {item && (
-                  <>
-                    {itemStatLine(item) && <div className="text-[11px]" style={{ color: T.parchmentDim, ...fontBody }}>{itemStatLine(item)}</div>}
-                    {item.description && <div className="text-[11px]" style={{ color: T.parchmentDim, ...fontBody }}>{item.description}</div>}
-                    <div className="flex gap-3 items-center flex-wrap">
-                      {slotOptions.length > 0 && (
-                        <SelectField label="Slot" value={row.slot || ""} onChange={(v) => setSlot(row.id, v)} options={slotOptions} small />
-                      )}
-                      <label className="flex items-center gap-1 text-[11px]" style={{ color: T.parchmentDim, ...fontBody }}>
-                        <input type="checkbox" checked={!!row.equipped} onChange={(e) => patchItem(row.id, { equipped: e.target.checked })} /> Worn/in use
-                      </label>
-                      {item.requires_attunement && (
-                        <label className="flex items-center gap-1 text-[11px]" style={{ color: T.parchmentDim, ...fontBody }}>
-                          <input type="checkbox" checked={!!row.attuned} onChange={(e) => patchItem(row.id, { attuned: e.target.checked })} /> Attuned
-                        </label>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-            );
-          })}
+          {character.character_inventory.map((row) => (
+            <InventoryRow key={row.id} row={row} item={itemFor(row)} onPatch={patchItem} onSetSlot={setSlot} onRemove={removeItem} />
+          ))}
           {character.character_inventory.length === 0 && <p className="text-xs" style={{ color: T.parchmentDim, ...fontBody }}>No items yet.</p>}
         </div>
       </div>
@@ -598,22 +652,7 @@ export default function CharacterSheet({ character, referenceData, onChanged, on
         </div>
         <div className="flex flex-col gap-2">
           {(character.abilities_known || []).map((a, idx) => (
-            <div key={idx} className="rounded p-2 flex flex-col gap-1.5" style={{ background: T.void, border: `1px solid ${T.line}` }}>
-              <div className="flex gap-1.5">
-                <input value={a.name} onChange={(e) => updateAbility(idx, { name: e.target.value })} placeholder="Ability name"
-                  className="flex-1 rounded px-2 py-1 text-sm outline-none" style={{ background: T.panel2, color: T.parchment, border: `1px solid ${T.line}`, ...fontBody }} />
-                <IconBtn onClick={() => removeAbility(idx)} title="Remove" danger><X size={13} /></IconBtn>
-              </div>
-              <textarea value={a.description} onChange={(e) => updateAbility(idx, { description: e.target.value })} placeholder="Description" rows={2}
-                className="rounded px-2 py-1 text-sm outline-none resize-none" style={{ background: T.panel2, color: T.parchment, border: `1px solid ${T.line}`, ...fontBody }} />
-              <div className="flex gap-2 items-center flex-wrap">
-                <span className="text-[10px] uppercase tracking-wider" style={{ color: T.parchmentDim, ...fontBody }}>Uses</span>
-                <NumberField value={a.uses_current} onChange={(v) => updateAbility(idx, { uses_current: Number(v) || 0 })} small />
-                <span style={{ color: T.parchmentDim, ...fontMono }}>/</span>
-                <NumberField value={a.uses_max} onChange={(v) => updateAbility(idx, { uses_max: Number(v) || 0 })} small />
-                <TextField label="Recharge" value={a.recharge} onChange={(v) => updateAbility(idx, { recharge: v })} placeholder="e.g. Short Rest" />
-              </div>
-            </div>
+            <AbilityRow key={idx} ability={a} idx={idx} onUpdate={updateAbility} onRemove={removeAbility} />
           ))}
           {(character.abilities_known || []).length === 0 && <p className="text-xs" style={{ color: T.parchmentDim, ...fontBody }}>No abilities tracked yet.</p>}
         </div>
@@ -636,7 +675,7 @@ export default function CharacterSheet({ character, referenceData, onChanged, on
 
       <div className="rounded-lg p-4" style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
         <div className="text-xs uppercase tracking-widest mb-2" style={{ ...fontBody, color: T.gold }}>Features & Notes</div>
-        <textarea value={character.features_notes || ""} onChange={(e) => patch({ features_notes: e.target.value })} rows={5}
+        <textarea value={notesLocal} onChange={(e) => setNotesLocal(e.target.value)} onBlur={flushNotesField} rows={5}
           className="w-full rounded px-2 py-2 text-sm outline-none resize-none" style={{ background: T.void, color: T.parchment, border: `1px solid ${T.line}`, ...fontBody }} />
       </div>
     </div>

@@ -13,22 +13,22 @@ export function IconBtn({ onClick, children, title, danger }) {
   );
 }
 
-export function NumberField({ label, value, onChange, small }) {
+export function NumberField({ label, value, onChange, onBlur, small }) {
   return (
     <label className="flex flex-col gap-1" style={fontBody}>
       {label && <span className="text-[10px] uppercase tracking-wider" style={{ color: T.parchmentDim }}>{label}</span>}
-      <input type="number" value={value} onChange={(e) => onChange(e.target.value === "" ? "" : Number(e.target.value))}
+      <input type="number" value={value} onChange={(e) => onChange(e.target.value === "" ? "" : Number(e.target.value))} onBlur={onBlur}
         className={`${small ? "w-14" : "w-20"} rounded px-2 py-1 text-center outline-none`}
         style={{ background: T.void, color: T.parchment, border: `1px solid ${T.line}`, ...fontMono }} />
     </label>
   );
 }
 
-export function TextField({ label, value, onChange, placeholder, wide }) {
+export function TextField({ label, value, onChange, onBlur, placeholder, wide }) {
   return (
     <label className="flex flex-col gap-1 flex-1" style={fontBody}>
       {label && <span className="text-[10px] uppercase tracking-wider" style={{ color: T.parchmentDim }}>{label}</span>}
-      <input type="text" value={value || ""} placeholder={placeholder} onChange={(e) => onChange(e.target.value)}
+      <input type="text" value={value || ""} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} onBlur={onBlur}
         className={`${wide ? "w-full" : ""} rounded px-2 py-1.5 outline-none`}
         style={{ background: T.void, color: T.parchment, border: `1px solid ${T.line}` }} />
     </label>
