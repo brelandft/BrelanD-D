@@ -58,12 +58,13 @@ const ACTIONS = [
 
 export default function DmReference() {
   return (
-    <div className="p-4 flex flex-col gap-3 max-w-4xl">
+    <div className="p-4 flex flex-col gap-3 max-w-7xl">
       <div className="flex items-center gap-2 mb-1">
         <BookOpen size={16} color={T.gold} />
         <span className="text-xs uppercase tracking-widest" style={{ ...fontBody, color: T.gold }}>DM Cheat Sheet</span>
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 items-start">
       <Section title="Difficulty classes">
         {DCS.map(([label, dc]) => <Row key={label} label={label} value={`DC ${dc}`} />)}
       </Section>
@@ -112,6 +113,7 @@ export default function DmReference() {
         <Row label="Short rest" value="≥ 1 hour — spend Hit Dice to heal" />
         <Row label="Long rest" value="≥ 8 hours — full HP, half Hit Dice, all spell slots" />
       </Section>
+      </div>
     </div>
   );
 }

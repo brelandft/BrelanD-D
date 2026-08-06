@@ -27,7 +27,7 @@ export default function ItemsPanel() {
   }
 
   return (
-    <div className="p-4 flex flex-col gap-3 max-w-4xl">
+    <div className="p-4 flex flex-col gap-3 max-w-7xl">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Backpack size={16} color={T.gold} />
@@ -44,7 +44,7 @@ export default function ItemsPanel() {
       <input value={query} onChange={(e) => { setQuery(e.target.value); runSearch(e.target.value); }} placeholder="Search items…"
         className="w-full rounded px-2 py-1.5 text-sm outline-none" style={{ background: T.void, color: T.parchment, border: `1px solid ${T.line}`, ...fontBody }} />
       {loading && <p className="text-xs" style={{ color: T.parchmentDim, ...fontBody }}>Loading…</p>}
-      <div className="flex flex-col gap-1.5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-2 items-start">
         {items.map((item) => (
           <div key={item.id} className="rounded-lg px-3 py-2 flex flex-col gap-1" style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
             <div className="flex items-center justify-between">

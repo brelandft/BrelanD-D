@@ -13,12 +13,13 @@ function Card({ title, children }) {
 
 export default function PartyReference() {
   return (
-    <div className="p-4 flex flex-col gap-3 max-w-4xl">
+    <div className="p-4 flex flex-col gap-3 max-w-7xl">
       <div className="flex items-center gap-2 mb-1">
         <BookOpen size={16} color={T.gold} />
         <span className="text-xs uppercase tracking-widest" style={{ ...fontBody, color: T.gold }}>Quick Reference</span>
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 items-start">
       <Card title="On your turn">
         You get one <b>Action</b>, one <b>Movement</b> (up to your speed, split up however you like), and one <b>Bonus Action</b> if something you have grants one. You can also interact with one object for free (drawing a weapon, opening a door). <b>Reactions</b> can be used once between your turns, whenever the trigger for one comes up — like an opportunity attack.
       </Card>
@@ -47,6 +48,7 @@ export default function PartyReference() {
       <Card title="Resting">
         A <b>short rest</b> is at least 1 hour — you can spend Hit Dice to heal. A <b>long rest</b> is at least 8 hours — you regain all HP, half your total Hit Dice (rounded down, minimum 1), and all spent spell slots.
       </Card>
+      </div>
     </div>
   );
 }

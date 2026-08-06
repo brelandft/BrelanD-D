@@ -363,7 +363,7 @@ export default function CharacterSheet({ character, referenceData, onChanged, on
   const referenceFeatures = [...featuresUpToLevel(currentClass), ...featuresUpToLevel(currentSubclass)];
 
   return (
-    <div className="flex flex-col gap-4 p-4 max-w-5xl">
+    <div className="flex flex-col gap-4 p-4 max-w-7xl">
       <div className="rounded-lg p-4" style={{ background: T.panel2, border: `1px solid ${T.line}` }}>
         <div className="flex justify-between items-start mb-3">
           <input value={nameLocal} onChange={(e) => setNameLocal(e.target.value)} onBlur={flushName} className="bg-transparent outline-none w-full"
