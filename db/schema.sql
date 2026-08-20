@@ -283,6 +283,8 @@ create table maps (
 create table campaign_notes (
   id          uuid primary key default gen_random_uuid(),
   campaign_id uuid not null references campaigns(id) on delete cascade,
+  parent_id   uuid references campaign_notes(id) on delete cascade,  -- nests under another note for branching/hub structures
+  order_index int not null default 0,                                -- display order among siblings
   title       text not null,
   category    text not null check (category in ('encounter', 'npc', 'location', 'plot', 'loot', 'reminder')),
   status      text not null default 'planned' check (status in ('planned', 'active', 'done')),
@@ -291,6 +293,7 @@ create table campaign_notes (
   updated_at  timestamptz default now()
 );
 create index idx_campaign_notes_campaign on campaign_notes(campaign_id);
+create index idx_campaign_notes_parent on campaign_notes(parent_id);
 
 -- A specific monster placed into play (its own HP, separate from the template)
 create table monster_instances (
@@ -391,10 +394,10 @@ create policy "public read" on sprites for select using (true);
 -- Homebrew additions to backgrounds/feats/subclasses/items/spells go
 -- through the in-app forms (AddSubclassForm, AddBackgroundForm,
 -- AddFeatForm, AddSpellForm, AddItemForm in frontend/src/lib/api.js)
--- using the anon key, so those five need an insert policy too (races/
+-- using the anon key, so those five need full write access too (races/
 -- classes/sprites stay read-only — no homebrew form writes to them).
-create policy "anon insert" on backgrounds for insert to anon with check (true);
-create policy "anon insert" on feats for insert to anon with check (true);
-create policy "anon insert" on subclasses for insert to anon with check (true);
-create policy "anon insert" on items for insert to anon with check (true);
-create policy "anon insert" on spells for insert to anon with check (true);
+create policy "anon full access" on backgrounds for all using (true) with check (true);
+create policy "anon full access" on feats for all using (true) with check (true);
+create policy "anon full access" on subclasses for all using (true) with check (true);
+create policy "anon full access" on items for all using (true) with check (true);
+create policy "anon full access" on spells for all using (true) with check (true);
