@@ -1,7 +1,7 @@
-import React, { useRef, useState } from "react";
-import { Upload, X } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { Upload, X, Shield } from "lucide-react";
 import { T, fontBody, fontMono } from "../lib/gameData";
-import { uploadMapImage, setMapImage, moveToken, removeToken as removeTokenApi, updateMonsterInstanceHp } from "../lib/api";
+import { uploadMapImage, setMapImage, moveToken, removeToken as removeTokenApi, updateMonsterInstanceHp, updateCharacterHp, loadCombatStats } from "../lib/api";
 import { TokenSprite, classImageFor, monsterImageFor, COLOR_HEX } from "../lib/sprites";
 
 function TokenHpEditor({ token, onApply, onClose }) {
@@ -20,13 +20,23 @@ function TokenHpEditor({ token, onApply, onClose }) {
   );
 }
 
-export default function CombatMap({ map, canEdit, onMapChanged, onTokensChanged }) {
+export default function CombatMap({ map, canEdit, onMapChanged, onTokensChanged, onCharacterHpChanged }) {
   const containerRef = useRef(null);
   const fileInputRef = useRef(null);
   const [showGrid, setShowGrid] = useState(false);
   const [dragId, setDragId] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [editingHpTokenId, setEditingHpTokenId] = useState(null);
+  const [statsById, setStatsById] = useState({});
+
+  const tokenKey = (map?.tokens || []).map((t) => t.entity_id).join(",");
+  useEffect(() => {
+    if (!map?.tokens?.length) { setStatsById({}); return; }
+    let cancelled = false;
+    loadCombatStats(map.tokens).then((s) => { if (!cancelled) setStatsById(s); }).catch(() => {});
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map?.id, tokenKey]);
 
   async function handleFile(e) {
     const file = e.target.files?.[0];
@@ -60,7 +70,12 @@ export default function CombatMap({ map, canEdit, onMapChanged, onTokensChanged 
     onTokensChanged(map.tokens.filter((t) => t.id !== id));
   }
   async function handleApplyHp(token, newHp) {
-    await updateMonsterInstanceHp(token.entity_id, newHp, token.hp_max);
+    if (token.entity_type === "monster_instance") {
+      await updateMonsterInstanceHp(token.entity_id, newHp, token.hp_max);
+    } else {
+      await updateCharacterHp(token.entity_id, newHp);
+      onCharacterHpChanged?.(token.entity_id, newHp);
+    }
     onTokensChanged(map.tokens.map((t) => (t.id === token.id ? { ...t, hp_current: newHp } : t)));
     setEditingHpTokenId(null);
   }
@@ -98,12 +113,19 @@ export default function CombatMap({ map, canEdit, onMapChanged, onTokensChanged 
             const isMonster = t.entity_type === "monster_instance";
             const image = isMonster ? monsterImageFor(t.sprite_key) : classImageFor(t.sprite_key);
             const backdropColor = isMonster ? T.blood : (COLOR_HEX[t.sprite_color] || T.blood);
+            const stats = statsById[t.entity_id];
             return (
               <div key={t.id}
                 onPointerDown={(e) => { if (!canEdit) return; e.stopPropagation(); setDragId(t.id); }}
-                onClick={(e) => { if (canEdit && isMonster) { e.stopPropagation(); setEditingHpTokenId(t.id); } }}
+                onClick={(e) => { if (canEdit) { e.stopPropagation(); setEditingHpTokenId(t.id); } }}
                 className="absolute flex flex-col items-center group"
                 style={{ left: `${t.x}%`, top: `${t.y}%`, transform: "translate(-50%, -50%)", cursor: canEdit ? "grab" : "default" }}>
+                {stats?.ac != null && (
+                  <span className="absolute -top-1 -left-1.5 z-[1] flex items-center gap-0.5 rounded-full px-1 text-[9px]"
+                    style={{ background: T.void, border: `1px solid ${T.line}`, color: T.parchment, ...fontMono }}>
+                    <Shield size={8} color={T.parchmentDim} />{stats.ac}
+                  </span>
+                )}
                 <TokenSprite image={image} backdropColor={backdropColor} size={34} />
                 <span className="text-[10px] mt-0.5 px-1 rounded whitespace-nowrap" style={{ background: "rgba(22,20,15,0.85)", color: T.parchment, ...fontBody }}>{t.label}</span>
                 {t.hp_current != null && (
@@ -117,6 +139,16 @@ export default function CombatMap({ map, canEdit, onMapChanged, onTokensChanged 
                     <X size={9} />
                   </button>
                 )}
+                {stats?.mainAttackName && (
+                  <div className="absolute z-10 hidden group-hover:block rounded px-2 py-1 text-[10px] whitespace-normal max-w-[220px]"
+                    style={{
+                      ...(t.y > 55 ? { bottom: "100%", marginBottom: "4px" } : { top: "100%", marginTop: "4px" }),
+                      background: T.panel, border: `1px solid ${T.line}`, color: T.parchment, ...fontBody,
+                    }}>
+                    <div className="whitespace-nowrap" style={{ color: T.gold }}>{stats.mainAttackName}</div>
+                    {stats.mainAttackDamage && <div style={{ color: T.parchmentDim, ...fontMono }}>{stats.mainAttackDamage}</div>}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -127,7 +159,7 @@ export default function CombatMap({ map, canEdit, onMapChanged, onTokensChanged 
         </div>
       )}
       <p className="text-xs" style={{ color: T.parchmentDim, ...fontBody }}>
-        {canEdit ? "Drag tokens to reposition. Click a monster token to adjust its HP." : "The DM controls token positions and HP."} Map and tokens are shared with everyone using this link.
+        {canEdit ? "Drag tokens to reposition. Click a token to adjust its HP. Hover a token for its AC and main attack." : "The DM controls token positions and HP."} Map and tokens are shared with everyone using this link.
       </p>
     </div>
   );

@@ -316,6 +316,67 @@ export async function updateMonsterInstanceHp(instanceId, hpCurrent, hpMax) {
   await syncTokenHp("monster_instance", instanceId, hpCurrent, hpMax);
 }
 
+// Same idea for character tokens — only touches hp.current, preserving
+// hp.max/hp.temp already on the sheet.
+export async function updateCharacterHp(characterId, hpCurrent) {
+  const { data: current, error: fetchErr } = await supabase.from("characters").select("hp").eq("id", characterId).single();
+  if (fetchErr) throw fetchErr;
+  const hp = { ...(current?.hp || {}), current: hpCurrent };
+  const { error } = await supabase.from("characters").update({ hp }).eq("id", characterId);
+  if (error) throw error;
+  await syncTokenHp("character", characterId, hpCurrent, hp.max);
+  return hp;
+}
+
+// Quick-reference combat stats (AC + main-hand attack) for whatever tokens
+// are currently on the map — fetched live so it always matches the sheet,
+// rather than denormalizing onto the token row.
+export async function loadCombatStats(tokens) {
+  const stats = {};
+  const charIds = tokens.filter((t) => t.entity_type === "character").map((t) => t.entity_id);
+  const instanceIds = tokens.filter((t) => t.entity_type === "monster_instance").map((t) => t.entity_id);
+
+  if (charIds.length) {
+    const { data: chars, error: e1 } = await supabase.from("characters").select("id, ac").in("id", charIds);
+    if (e1) throw e1;
+    for (const c of chars || []) stats[c.id] = { ac: c.ac };
+
+    const { data: inv, error: e2 } = await supabase
+      .from("character_inventory")
+      .select("character_id, items(name, damage)")
+      .in("character_id", charIds)
+      .eq("slot", "main_hand");
+    if (e2) throw e2;
+    for (const row of inv || []) {
+      if (!row.items) continue;
+      stats[row.character_id] = {
+        ...(stats[row.character_id] || {}),
+        mainAttackName: row.items.name,
+        mainAttackDamage: row.items.damage ? `${row.items.damage.dice} ${row.items.damage.type}` : null,
+      };
+    }
+  }
+
+  if (instanceIds.length) {
+    const { data: instances, error: e3 } = await supabase
+      .from("monster_instances")
+      .select("id, monsters(ac, actions)")
+      .in("id", instanceIds);
+    if (e3) throw e3;
+    for (const inst of instances || []) {
+      if (!inst.monsters) continue;
+      const firstAction = (inst.monsters.actions || [])[0];
+      stats[inst.id] = {
+        ac: inst.monsters.ac,
+        mainAttackName: firstAction?.name || null,
+        mainAttackDamage: firstAction?.description || null,
+      };
+    }
+  }
+
+  return stats;
+}
+
 // Keeps a token's denormalized HP display in sync after the underlying
 // character/monster's HP changes. There's no live cross-screen sync yet
 // (see README), so this only updates the database row — the local map

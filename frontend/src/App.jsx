@@ -138,6 +138,9 @@ export default function App() {
       })));
     }
   }
+  function handleCharacterHpChangedFromMap(characterId, hpCurrent) {
+    setCharacters((prev) => prev.map((c) => (c.id === characterId ? { ...c, hp: { ...c.hp, current: hpCurrent } } : c)));
+  }
   function handleCampaignChanged(updated) {
     setCampaigns((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
   }
@@ -315,7 +318,7 @@ export default function App() {
                 {tab === "map" && (
                   <>
                     <MapTabs maps={maps} activeMapId={activeMapId} onSelect={setActiveMapId} onCreate={handleCreateMap} onDelete={handleDeleteMap} onRename={handleRenameMap} />
-                    <CombatMap map={activeMap} canEdit={view === "dm"} onMapChanged={(m) => updateMapFields(m.id, m)} onTokensChanged={(tokens) => updateMapTokens(activeMap.id, tokens)} />
+                    <CombatMap map={activeMap} canEdit={view === "dm"} onMapChanged={(m) => updateMapFields(m.id, m)} onTokensChanged={(tokens) => updateMapTokens(activeMap.id, tokens)} onCharacterHpChanged={handleCharacterHpChangedFromMap} />
                   </>
                 )}
                 {tab === "reference" && <PartyReference />}
@@ -337,7 +340,7 @@ export default function App() {
               {dmTab === "map" && (
                 <>
                   <MapTabs maps={maps} activeMapId={activeMapId} onSelect={setActiveMapId} onCreate={handleCreateMap} onDelete={handleDeleteMap} onRename={handleRenameMap} />
-                  <CombatMap map={activeMap} canEdit={view === "dm"} onMapChanged={(m) => updateMapFields(m.id, m)} onTokensChanged={(tokens) => updateMapTokens(activeMap.id, tokens)} />
+                  <CombatMap map={activeMap} canEdit={view === "dm"} onMapChanged={(m) => updateMapFields(m.id, m)} onTokensChanged={(tokens) => updateMapTokens(activeMap.id, tokens)} onCharacterHpChanged={handleCharacterHpChangedFromMap} />
                 </>
               )}
               {dmTab === "items" && <ItemsPanel />}
